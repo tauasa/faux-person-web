@@ -23,8 +23,9 @@ MemoryHigh=640M
 MemoryMax=768M
 
 # Nothing the app makes reaches disk: /tmp (Tomcat's work folder) is in memory,
-# and the rest of the file system is read-only to it.
-TemporaryFileSystem=/tmp
+# and the rest of the file system is read-only to it. systemd would make /tmp
+# 0755 and root's, which the app can't write to, so the mode is set.
+TemporaryFileSystem=/tmp:mode=1777
 ProtectSystem=strict
 ProtectHome=true
 PrivateDevices=true
