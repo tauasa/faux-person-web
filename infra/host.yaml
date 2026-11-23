@@ -26,13 +26,16 @@ Parameters:
   HostedZoneId:
     Type: AWS::Route53::HostedZone::Id
     Description: tauasa.org's Route 53 zone (the HostedZoneId output of tauasa.org's bootstrap stack).
-  GitHubRepository:
+  GitHubSubjectPrefix:
     Type: String
-    Default: tauasa/faux-person-web
-    AllowedPattern: "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    Default: repo:tauasa@205476/faux-person-web@1468140622
+    AllowedPattern: "^repo:[^:*]+$"
     Description: >-
-      The repository whose workflows may deploy. Each role trusts only its own
-      GitHub environment there: repo:<this>:environment:<staging|production>.
+      The repository's OIDC subject prefix, the only one these roles trust.
+      This repo uses GitHub's immutable form (owner@id/repo@id), so a renamed
+      or re-created repository can't inherit the roles. Each role trusts only
+      its own GitHub environment: <this>:environment:<staging|production>.
+      Check it with `gh api repos/<owner>/<repo>/actions/oidc/customization/sub`.
 
 Resources:
   # Releases are kept 30 days, for reference. Rollback is a revert and a deploy (infra/README.md).
@@ -256,7 +259,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepository}:environment:staging"
+                token.actions.githubusercontent.com:sub: !Sub "${GitHubSubjectPrefix}:environment:staging"
       Policies:
         - PolicyName: deploy-staging
           PolicyDocument:
@@ -287,7 +290,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepository}:environment:production"
+                token.actions.githubusercontent.com:sub: !Sub "${GitHubSubjectPrefix}:environment:production"
       Policies:
         - PolicyName: deploy-production
           PolicyDocument:
