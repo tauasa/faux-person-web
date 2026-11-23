@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * A version for each of the page's own files, a hash of its content. The page
- * puts it in the file's address as {@code ?v=}, so a browser never pairs a new
- * page with a file it kept from an older release. It's a query and not part of
- * the name because browsers may keep a page for a day: an older page's
- * addresses must still load.
+ * puts it in the file's address as {@code ?v=}, so after a release changes a
+ * file, a new page doesn't use the copy a browser kept. It's a query and not
+ * part of the name because browsers may keep a page for a day: an older page's
+ * addresses must still load, though they get the current files.
  */
 @Component("assets")
 public class Assets {

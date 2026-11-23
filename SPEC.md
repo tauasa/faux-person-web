@@ -148,9 +148,11 @@ was used.
   is generated or rendered. A response to a request without a seed gets
   `Cache-Control: no-store`, because a repeat would pick another seed.
 - **The page's own files** are linked as `/app.css?v=<hash of its content>`, and
-  `/app.js` the same way, so a new page never uses a file kept from an older
-  release. It's a query, not part of the name, so a page kept from an older
-  release can still load its files.
+  `/app.js` the same way, so after a release changes a file, a new page doesn't
+  use the copy a browser kept. It's a query, not part of the name, so a page
+  kept from an older release still loads, but with the current release's files:
+  keep them working with the last day's pages. A browser that stored the newer
+  bytes under an older address can still use them briefly after a rollback.
 - **Nothing reaches disk.** nginx proxies without `proxy_cache` and buffers in
   memory (`proxy_max_temp_file_size 0`). The app's `/tmp` is in memory.
 
