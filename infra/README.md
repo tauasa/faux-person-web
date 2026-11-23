@@ -109,7 +109,11 @@ aws sts get-caller-identity --profile tauasa
    as well as the typed phrase.
 
    Each deploy role trusts only the token GitHub issues to this repository's
-   matching environment, `repo:tauasa/faux-person-web:environment:<name>`.
+   matching environment. The repository uses GitHub's immutable subject form,
+   `repo:tauasa@205476/faux-person-web@1468140622:environment:<name>`, so a
+   repository renamed or re-created under the same name can't use the roles.
+   The stack's `GitHubSubjectPrefix` holds it; check it with
+   `gh api repos/tauasa/faux-person-web/actions/oidc/customization/sub`.
 
 6. **Deploy production first**: Actions → *deploy-production* → *Run
    workflow* on `main`, typing `deploy to production`. Production's deploy
