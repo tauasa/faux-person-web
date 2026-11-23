@@ -169,6 +169,11 @@ Resources:
   # may run only staging's document can only deploy staging. Each parameter is
   # checked by pattern before it reaches the shell.
   #
+  # Each starts with an empty folder: downloadContent saves a file inside
+  # destinationPath only when that folder exists, and otherwise as a file by
+  # that name. UpdateMethod NewVersion keeps a document's name when it changes,
+  # since the deploy roles and GitHub's variables hold the name.
+  #
   # Staging's document runs no script from the package: only the commands
   # below, which swap staging's jar and restart staging. The jar runs as the
   # unprivileged faux-person-web-staging user, limited to port 8081. The host
@@ -177,6 +182,7 @@ Resources:
     Type: AWS::SSM::Document
     Properties:
       DocumentType: Command
+      UpdateMethod: NewVersion
       DocumentFormat: YAML
       Content:
         schemaVersion: "2.2"
@@ -187,6 +193,15 @@ Resources:
             description: The jar's file name under staging/ in the release bucket.
             allowedPattern: "^faux-person-web-[A-Za-z0-9._-]+\\.jar$"
         mainSteps:
+          - action: aws:runShellScript
+            name: prepare
+            inputs:
+              onFailure: exit
+              timeoutSeconds: "60"
+              runCommand:
+                - set -eu
+                - rm -rf /var/tmp/faux-person-web-release/staging
+                - mkdir -p /var/tmp/faux-person-web-release/staging
           - action: aws:downloadContent
             name: download
             inputs:
@@ -216,6 +231,7 @@ Resources:
     Type: AWS::SSM::Document
     Properties:
       DocumentType: Command
+      UpdateMethod: NewVersion
       DocumentFormat: YAML
       Content:
         schemaVersion: "2.2"
@@ -226,6 +242,15 @@ Resources:
             description: The package's file name under production/ in the release bucket.
             allowedPattern: "^faux-person-web-[A-Za-z0-9._-]+\\.tar\\.gz$"
         mainSteps:
+          - action: aws:runShellScript
+            name: prepare
+            inputs:
+              onFailure: exit
+              timeoutSeconds: "60"
+              runCommand:
+                - set -eu
+                - rm -rf /var/tmp/faux-person-web-release/production
+                - mkdir -p /var/tmp/faux-person-web-release/production
           - action: aws:downloadContent
             name: download
             inputs:
