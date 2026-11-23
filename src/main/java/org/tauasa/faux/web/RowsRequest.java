@@ -22,7 +22,7 @@ import org.tauasa.faux.model.Region;
  * @param sort       the column to sort by
  * @param descending sort Z to A
  * @param page       the page to show, from 1. HTML only
- * @param size       rows a page. HTML only
+ * @param size       rows per page. HTML only
  */
 public record RowsRequest(Kind kind, int count, Long seed, Region region, boolean real, Format format,
         Column sort, boolean descending, int page, int size) {

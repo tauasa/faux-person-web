@@ -65,6 +65,62 @@ class PageTest extends HttpTest {
     }
 
     @Test
+    void pageLinksAreAboveAndBelowTheTableAndRowsPerPageComesFirstBelow() {
+        String html = get("/names?count=120&seed=5&page=2&size=50").body();
+        String above = html.substring(html.indexOf("class=\"summary\""), html.indexOf("<table>"));
+        String below = html.substring(html.indexOf("</table>"), html.indexOf("class=\"exports\""));
+        for (String part : List.of(above, below)) {
+            for (String label : List.of("First", "Previous", "Next", "Last")) {
+                assertTrue(part.contains(">" + label + "</a>"), label + " in " + part);
+            }
+        }
+        int range = above.indexOf("class=\"range\"");
+        assertTrue(above.indexOf("shown-seed") < range && range < above.indexOf(">First</a>"),
+                "seed, then rows, then page links");
+        int sizes = below.indexOf("Rows per page:");
+        assertTrue(sizes >= 0 && sizes < below.indexOf(">First</a>"), "rows per page, then page links");
+    }
+
+    @Test
+    void thePageNumberAndLinksAreTheSameAboveAndBelowTheTable() {
+        for (String query : List.of("count=120&seed=5&page=2&size=50", "count=5&seed=5")) {
+            String html = get("/names?" + query).body();
+            List<String> pagers = Pattern.compile("<nav class=\"pages\"[^>]*>(.*?)</nav>", Pattern.DOTALL)
+                    .matcher(html).results().map(m -> m.group(1).replaceAll("\\s+", " ")).toList();
+            assertEquals(2, pagers.size(), query);
+            assertEquals(pagers.get(0), pagers.get(1), query);
+            assertTrue(pagers.get(0).contains(query.contains("page=2") ? "Page 2 of 3" : "Page 1 of 1"),
+                    pagers.get(0));
+        }
+    }
+
+    @Test
+    void thePageAndItsErrorPageHaveTheSiteHeaderAndFooter() {
+        assertEquals(200, get("/people?count=5&seed=1").statusCode());
+        assertEquals(400, get("/people?count=0").statusCode());
+        for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
+            String html = get(path).body();
+            String header = between(html, "<header class=\"site-header\">", "</header>");
+            for (String link : List.of("https://tauasa.org/", "https://tauasa.org/#home",
+                    "https://tauasa.org/#projects", "https://tauasa.org/#about")) {
+                assertTrue(header.contains("href=\"" + link + "\""), link + " on " + path);
+            }
+            String footer = between(html, "<footer class=\"site-footer\">", "</footer>");
+            assertTrue(footer.contains("Tauasa Timoteo"), footer);
+            for (String name : List.of("GitHub", "LinkedIn", "YouTube", "Instagram", "Facebook")) {
+                assertTrue(footer.contains("aria-label=\"" + name + "\""), name + " on " + path);
+            }
+            assertFalse(Pattern.compile("<script>|style=\"|onclick=").matcher(html).find(), path);
+        }
+    }
+
+    private static String between(String html, String start, String end) {
+        int from = html.indexOf(start);
+        assertTrue(from >= 0, start);
+        return html.substring(from, html.indexOf(end, from));
+    }
+
+    @Test
     void aHeaderSortsAToZThenReversesOnASecondClick() {
         String html = get("/companies?count=30&seed=2").body();
         assertTrue(html.contains("aria-sort=\"ascending\""), "opens sorted by Name, A to Z");
