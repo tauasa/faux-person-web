@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -161,10 +165,36 @@ class PageTest extends HttpTest {
     @Test
     void thePageLoadsOnlyItsOwnScriptAndStyles() {
         String html = get("/people?count=5&seed=1").body();
-        assertTrue(html.contains("<script src=\"/faux-person-web/app.js\" defer></script>"));
+        assertTrue(Pattern.compile("<script src=\"/faux-person-web/app\\.js\\?v=[0-9a-f]{16}\" defer></script>")
+                .matcher(html).find());
         assertFalse(Pattern.compile("<script>|style=\"|onclick=").matcher(html).find(),
                 "no inline script or style, so the CSP can forbid them");
         assertEquals(200, get("/app.js").statusCode());
         assertEquals(200, get("/app.css").statusCode());
+    }
+
+    /** A browser holding an older release's file asks again only if its address changes. */
+    @Test
+    void eachFilesAddressCarriesAHashOfItsContentOnEveryPage() throws Exception {
+        for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
+            String html = get(path, "Accept", "text/html").body();
+            for (String file : List.of("app.css", "app.js")) {
+                Matcher link = Pattern.compile("\"/faux-person-web(/" + Pattern.quote(file) + "\\?v=([^\"]*))\"")
+                        .matcher(html);
+                assertTrue(link.find(), file + " is versioned on " + path);
+                HttpResponse<String> served = get(link.group(1));
+                assertEquals(200, served.statusCode());
+                byte[] hash = MessageDigest.getInstance("SHA-256")
+                        .digest(served.body().getBytes(StandardCharsets.UTF_8));
+                assertEquals(HexFormat.of().formatHex(hash, 0, 8), link.group(2), file);
+            }
+        }
+    }
+
+    /** Browsers may keep a seeded page for a day, so its older addresses must still load. */
+    @Test
+    void anOlderPagesFileAddressStillLoads() {
+        assertEquals(200, get("/app.css?v=0000000000000000").statusCode());
+        assertEquals(200, get("/app.js?v=0000000000000000").statusCode());
     }
 }
