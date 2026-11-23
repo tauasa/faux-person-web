@@ -1,0 +1,175 @@
+# The one deploy workflow. deploy-staging.yml and deploy-production.yml call it;
+# they differ only in which GitHub environment they use.
+#
+# Two jobs, so code from the build (Maven, its plugins, the tests and every
+# dependency) never runs where an AWS token can be had:
+#   build   compiles, tests and packages, with read-only permissions and no
+#           environment, and hands the release on as an artifact
+#   deploy  in the environment, with id-token: write. It runs no project code:
+#           it uploads the release and runs the environment's SSM document
+#   smoke   no environment and no AWS token: runs scripts/smoke.sh against the
+#           live address
+#
+# Staging gets only the jar, which its document swaps in. Production gets the
+# package (jar and deploy/), whose install script also sets up the host.
+#
+# Each GitHub environment (staging, production) sets these variables, from
+# infra/host.yaml's outputs (infra/README.md says how):
+#   AWS_DEPLOY_ROLE_ARN   that environment's deploy role
+#   RELEASE_BUCKET        the release bucket
+#   DEPLOY_DOCUMENT       that environment's SSM deploy document
+#   INSTANCE_ID           the instance
+#   APP_URL               https://apps.tauasa.org/faux-person-web[-staging]
+# Until they exist, the deploy skips with a notice.
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      name: ${{ steps.package.outputs.name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      # The commit goes into every ETag, so a release never matches an older one's.
+      - name: Build and test
+        run: mvn -B verify "-Dbuild.id=${GITHUB_SHA::12}"
+      - name: Package
+        id: package
+        run: |
+          name="${GITHUB_SHA::12}-${GITHUB_RUN_ID}"
+          scripts/package.sh "$name"
+          cp target/faux-person-web.jar "target/faux-person-web-$name.jar"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: |
+            target/faux-person-web-${{ steps.package.outputs.name }}.jar
+            target/faux-person-web-${{ steps.package.outputs.name }}.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+      app_url: ${{ steps.check.outputs.app_url }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      AWS_REGION: us-east-1
+      RELEASE_BUCKET: ${{ vars.RELEASE_BUCKET }}
+      DEPLOY_DOCUMENT: ${{ vars.DEPLOY_DOCUMENT }}
+      INSTANCE_ID: ${{ vars.INSTANCE_ID }}
+      APP_URL: ${{ vars.APP_URL }}
+      ENVIRONMENT: ${{ inputs.environment }}
+      NAME: ${{ needs.build.outputs.name }}
+    steps:
+      - name: Check AWS is wired up
+        id: check
+        env:
+          DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          missing=""
+          for v in DEPLOY_ROLE_ARN RELEASE_BUCKET DEPLOY_DOCUMENT INSTANCE_ID APP_URL; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          case "$ENVIRONMENT" in
+            staging|production) ;;
+            *) echo "::error::Unknown environment $ENVIRONMENT"; exit 1 ;;
+          esac
+          if [ -n "$missing" ]; then
+            echo "::notice title=Deploy skipped::$ENVIRONMENT is missing:$missing. infra/README.md says how to set them."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "app_url=$APP_URL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.check.outputs.ready == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+
+      - if: steps.check.outputs.ready == 'true'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload the release
+        id: upload
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          if [ "$ENVIRONMENT" = staging ]; then
+            file="faux-person-web-$NAME.jar"; param=jar
+          else
+            file="faux-person-web-$NAME.tar.gz"; param=package
+          fi
+          aws s3 cp --no-progress "release/$file" "s3://$RELEASE_BUCKET/$ENVIRONMENT/$file"
+          echo "parameters=$param=$file" >> "$GITHUB_OUTPUT"
+
+      - name: Install it on the instance
+        if: steps.check.outputs.ready == 'true'
+        env:
+          PARAMETERS: ${{ steps.upload.outputs.parameters }}
+        run: |
+          id=$(aws ssm send-command --document-name "$DEPLOY_DOCUMENT" --instance-ids "$INSTANCE_ID" \
+            --parameters "$PARAMETERS" --comment "faux-person-web $ENVIRONMENT ${GITHUB_SHA::7}" \
+            --query Command.CommandId --output text)
+          echo "SSM command $id"
+          # Up to about 10 minutes: the first production deploy installs packages and gets the certificate.
+          status=Pending
+          for _ in $(seq 1 120); do
+            status=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$status" in
+              Pending|InProgress|Delayed) sleep 5 ;;
+              *) break ;;
+            esac
+          done
+          aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text || true
+          echo "SSM status: $status"
+          [ "$status" = Success ]
+
+  # A job of its own, so the repo's script never runs where an AWS token is.
+  smoke:
+    needs: deploy
+    if: needs.deploy.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      APP_URL: ${{ needs.deploy.outputs.app_url }}
+      ENVIRONMENT: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Smoke test
+        run: scripts/smoke.sh "$APP_URL"
+      - name: Record what shipped
+        run: echo "Deployed \`${GITHUB_SHA::7}\` to **$ENVIRONMENT** at $APP_URL on $(date -u +%F)." >> "$GITHUB_STEP_SUMMARY"

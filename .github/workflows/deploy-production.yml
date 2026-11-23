@@ -1,0 +1,37 @@
+# Production starts by hand, from main, and only when the person types the phrase.
+# These checks run from whichever branch's copy of this file is dispatched, so
+# they guard against a misclick. What keeps production to main is the
+# production GitHub environment's branch rule (infra/README.md).
+name: deploy-production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy to production" to deploy main to https://apps.tauasa.org/faux-person-web'
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  confirm:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check the phrase and the branch
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" != "deploy to production" ]; then
+            echo "::error::Confirmation didn't match. Type exactly: deploy to production"; exit 1
+          fi
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Production deploys only from main, not $GITHUB_REF"; exit 1
+          fi
+
+  production:
+    needs: confirm
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production

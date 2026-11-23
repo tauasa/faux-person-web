@@ -1,0 +1,50 @@
+#!/bin/sh
+# Runs before every commit, whichever agent or human is committing.
+# Git only runs it after: git config core.hooksPath .githooks
+# From Sanvio Factory by Sanvio Labs, MIT: https://github.com/SanvioLabs/sanvio-factory
+
+status=0
+# One name per line. R lists a renamed file under its new name, T a file whose
+# type changed (a symlink now a file), and quotePath=false keeps accented names
+# as written instead of escaped. Git still quotes a name holding a quote, a
+# backslash, a tab or a newline; block 1 blocks those, since it can't read them.
+staged=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMRT)
+
+# 1. Credentials never get committed.
+# A heredoc, not a pipe, so the loop runs in this shell and status=1 survives it.
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  case "$f" in
+    .env|.env.*|*/.env|*/.env.*|*.pem|*.key|id_rsa*|*/id_rsa*)
+      echo "BLOCKED: $f looks like a credential file. Unstage it: git reset -- \"$f\""
+      status=1
+      continue
+      ;;
+  esac
+  # :0: names the staged copy, so a file called 0:x.txt isn't read as x.txt.
+  # A name the index doesn't hold (one git quoted) is blocked, not passed unread.
+  if ! git rev-parse -q --verify ":0:$f" >/dev/null; then
+    echo "BLOCKED: $f could not be read for scanning. Rename it."
+    status=1
+    continue
+  fi
+  if git show ":0:$f" | grep -Eq 'AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----'; then
+    echo "BLOCKED: $f contains something that looks like a secret. Remove it and use an environment variable."
+    status=1
+  fi
+done <<EOF
+$staged
+EOF
+
+# 2. A proposal only gets committed if the gate passes (examples/proposal/).
+proposals=$(printf '%s\n' "$staged" | grep '^examples/proposal/proposals/.*\.md$')
+if [ -n "$proposals" ]; then
+  python3 examples/proposal/gates/proposal_gate.py $proposals || status=1
+fi
+
+# Your own gates go here, one block each, in the same shape as block 2.
+
+if [ "$status" -ne 0 ]; then
+  echo "Commit blocked. Fix what's named above. Don't reach for --no-verify."
+fi
+exit $status

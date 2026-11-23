@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${view.kind().title()} + ' · faux-person-web'">People · faux-person-web</title>
+  <link rel="stylesheet" th:href="@{/app.css}">
+  <script th:src="@{/app.js}" defer></script>
+</head>
+<body th:attr="data-kind=${view.kind().path()}">
+<header class="top">
+  <h1>faux-person-web</h1>
+  <p class="tagline">Random names, companies and people from
+    <a href="https://github.com/tauasa/faux-person">faux-person</a>. Same seed, same rows.</p>
+</header>
+
+<nav class="tabs" aria-label="What to generate">
+  <a th:each="tab : ${view.tabs()}" th:href="${tab.href()}" th:text="${tab.title()}"
+     th:classappend="${tab.active()} ? 'active'" th:attr="aria-current=${tab.active()} ? 'page' : null">People</a>
+</nav>
+
+<main>
+  <form class="controls" method="get" th:action="${view.form().action()}" th:object="${view.form()}">
+    <label>Count
+      <input type="number" name="count" min="1" th:max="${view.form().maxCount()}"
+             th:value="${view.form().count()}" required>
+    </label>
+    <label th:if="${view.form().usesRegion()}">Region
+      <select name="region">
+        <option th:each="o : ${view.form().regions()}" th:value="${o.value()}" th:text="${o.label()}"
+                th:selected="${o.selected()}">Mixed</option>
+      </select>
+    </label>
+    <label>Seed
+      <input type="text" name="seed" id="seed" inputmode="numeric" autocomplete="off" list="seed-history"
+             placeholder="random" th:value="${view.form().seed()}">
+      <datalist id="seed-history"></datalist>
+    </label>
+    <button type="button" id="random" hidden title="Clear the seed, so Generate picks a new one">Random</button>
+    <label class="check" th:if="${view.form().usesReal()}">
+      <input type="checkbox" name="real" value="true" th:checked="${view.form().real()}"> Real companies
+    </label>
+    <label>Format
+      <select name="format">
+        <option th:each="o : ${view.form().formats()}" th:value="${o.value()}" th:text="${o.label()}"
+                th:selected="${o.selected()}">HTML</option>
+      </select>
+    </label>
+    <input type="hidden" name="sort" th:value="${view.form().sort()}">
+    <input type="hidden" name="dir" th:value="${view.form().dir()}">
+    <input type="hidden" name="size" th:value="${view.form().size()}">
+    <button type="submit" class="primary">Generate</button>
+  </form>
+
+  <p class="error" role="alert" th:if="${view.error()}" th:text="${view.error()}">count must be ...</p>
+
+  <section th:if="${view.table()}" th:with="t=${view.table()}">
+    <p class="summary">
+      Seed <code id="shown-seed" th:text="${view.form().seed()}">123</code>.
+      Rows <span th:text="${#numbers.formatInteger(t.from(), 1, 'COMMA')}">1</span>–<span
+        th:text="${#numbers.formatInteger(t.to(), 1, 'COMMA')}">50</span> of <span
+        th:text="${#numbers.formatInteger(t.total(), 1, 'COMMA')}">100</span>.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+        <tr>
+          <th th:each="h : ${t.headers()}" scope="col" th:attr="aria-sort=${h.ariaSort()}">
+            <a th:href="${h.href()}"><span th:text="${h.title()}">Last name</span><span class="arrow"
+                th:if="${!#strings.isEmpty(h.arrow())}" th:text="' ' + ${h.arrow()}"> ▲</span></a>
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${t.rows()}">
+          <td th:each="cell : ${row}" th:text="${cell}">value</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="pager" aria-label="Pages">
+      <span th:text="'Page ' + ${t.page()} + ' of ' + ${t.pages()}">Page 1 of 2</span>
+      <a th:each="l : ${t.pageLinks()}" th:href="${l.href()}" th:text="${l.label()}">Next</a>
+      <span class="sizes">Rows a page:
+        <a th:each="s : ${t.sizeLinks()}" th:href="${s.value()}" th:text="${s.label()}"
+           th:classappend="${s.selected()} ? 'active'" th:attr="aria-current=${s.selected()} ? 'true' : null">50</a>
+      </span>
+    </nav>
+
+    <section class="exports">
+      <h2>The same rows, every one</h2>
+      <p>
+        <a th:each="d : ${view.downloads()}" th:href="${d.href()}" th:text="${d.label()}" class="pill">CSV</a>
+      </p>
+      <p>With cURL:</p>
+      <div class="curl">
+        <code id="curl" th:text="${view.curl()}">curl '...'</code>
+        <button type="button" id="copy-curl" hidden>Copy</button>
+      </div>
+    </section>
+  </section>
+</main>
+
+<footer>
+  <a href="https://github.com/tauasa/faux-person-web">faux-person-web</a> ·
+  <a href="https://github.com/tauasa/faux-person">faux-person</a> ·
+  <a href="https://tauasa.org">tauasa.org</a> · MIT license.
+  Nothing is stored: rows live in this server's memory until it restarts.
+</footer>
+</body>
+</html>

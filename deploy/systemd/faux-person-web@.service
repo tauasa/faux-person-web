@@ -1,0 +1,48 @@
+# One unit per environment: faux-person-web@production and faux-person-web@staging.
+# Each runs as its own user (faux-person-web-production, faux-person-web-staging),
+# and a drop-in written by deploy/install.sh limits each to its own port.
+# Only the production deploy installs this file; staging's deploy can't change it.
+[Unit]
+Description=faux-person-web (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=faux-person-web-%i
+Group=faux-person-web-%i
+EnvironmentFile=/etc/faux-person-web/%i.env
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/faux-person-web/%i/faux-person-web.jar
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+
+# Memory: the heap is 384 MB (deploy/env); the process measured 555 MB with its
+# caches full. Past MemoryMax the kernel stops this unit, not the other one or nginx.
+MemoryHigh=640M
+MemoryMax=768M
+
+# Nothing the app makes reaches disk: /tmp (Tomcat's work folder) is in memory,
+# and the rest of the file system is read-only to it.
+TemporaryFileSystem=/tmp
+ProtectSystem=strict
+ProtectHome=true
+PrivateDevices=true
+NoNewPrivileges=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+# The instance's metadata service holds its role's credentials; the app never needs them.
+IPAddressDeny=169.254.169.254
+
+[Install]
+WantedBy=multi-user.target

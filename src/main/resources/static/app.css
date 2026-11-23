@@ -1,0 +1,147 @@
+/* faux-person-web. Light and dark follow the browser's setting. */
+:root {
+  --bg: #f7f7f5;
+  --panel: #ffffff;
+  --fg: #1d1f21;
+  --muted: #5f6368;
+  --border: #d9dbdf;
+  --accent: #2f6fde;
+  --accent-fg: #ffffff;
+  --stripe: #f1f3f6;
+  --error-bg: #fdecea;
+  --error-fg: #8a1c12;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1d20;
+    --panel: #24272b;
+    --fg: #e6e6e3;
+    --muted: #a3a7ad;
+    --border: #3a3e44;
+    --accent: #6c9ef8;
+    --accent-fg: #0f1114;
+    --stripe: #2a2e33;
+    --error-bg: #4a1c18;
+    --error-fg: #ffd9d4;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px 32px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 var(--sans);
+}
+
+a { color: var(--accent); }
+
+.top { max-width: 1200px; margin: 0 auto; padding: 20px 0 8px; }
+.top h1 { margin: 0; font-size: 1.4rem; }
+.tagline { margin: 4px 0 0; color: var(--muted); }
+
+.tabs {
+  max-width: 1200px;
+  margin: 8px auto 0;
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.tabs a {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  color: var(--fg);
+  text-decoration: none;
+}
+.tabs a.active {
+  background: var(--panel);
+  border-color: var(--border);
+  margin-bottom: -1px;
+  font-weight: 600;
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 16px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.controls label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.controls label.check { flex-direction: row; align-items: center; gap: 6px; color: var(--fg); padding-bottom: 8px; }
+.controls input[type=number] { width: 8em; }
+.controls input[name=seed] { width: 14em; font-family: var(--mono); }
+
+input, select, button {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+button { cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+
+.error { background: var(--error-bg); color: var(--error-fg); padding: 10px 12px; border-radius: 6px; }
+
+.summary { color: var(--muted); }
+.summary code { color: var(--fg); font-family: var(--mono); }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
+th { background: var(--stripe); position: sticky; top: 0; }
+th a { color: var(--fg); text-decoration: none; }
+th a:hover { text-decoration: underline; }
+tbody tr:nth-child(even) { background: var(--stripe); }
+
+.pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0; }
+.pager .sizes { margin-left: auto; color: var(--muted); }
+.pager .sizes a { margin-left: 6px; }
+.pager a.active { font-weight: 700; color: var(--fg); text-decoration: none; }
+
+.exports h2 { font-size: 1rem; margin: 20px 0 8px; }
+.pill {
+  display: inline-block;
+  margin: 0 6px 6px 0;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+}
+.curl { display: flex; gap: 8px; align-items: flex-start; }
+.curl code {
+  flex: 1;
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+footer { max-width: 1200px; margin: 16px auto 0; color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+  .controls label, .controls input[name=seed] { width: 100%; }
+  .pager .sizes { margin-left: 0; }
+}

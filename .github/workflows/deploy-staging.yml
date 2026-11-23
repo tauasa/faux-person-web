@@ -1,0 +1,16 @@
+# Every merge to main deploys to staging: https://apps.tauasa.org/faux-person-web-staging
+name: deploy-staging
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  staging:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging

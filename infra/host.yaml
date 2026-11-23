@@ -1,0 +1,326 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  faux-person-web's host at apps.tauasa.org: one EC2 instance running nginx
+  and the app's staging and production processes, its Elastic IP and DNS
+  record, a private bucket for release packages, and for each environment its
+  own SSM deploy document and its own GitHub deploy role, which can write only
+  that environment's packages and run only that environment's document.
+  Staging's document runs only the fixed commands written here, to swap
+  staging's jar; only production's runs the package's install script, which
+  sets up the host. Deployed by hand (infra/README.md), never by CI. No SSH,
+  no access keys.
+
+Parameters:
+  ImageId:
+    Type: AWS::EC2::Image::Id
+    Description: >-
+      Ubuntu 24.04 arm64. A fixed value, so a stack update never replaces the
+      instance by surprise. infra/README.md says how to look up the current one.
+  InstanceType:
+    Type: String
+    Default: t4g.small
+    AllowedValues: [t4g.small, t4g.medium]
+  DomainName:
+    Type: String
+    Default: apps.tauasa.org
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+    Description: tauasa.org's Route 53 zone (the HostedZoneId output of tauasa.org's bootstrap stack).
+  GitHubRepository:
+    Type: String
+    Default: tauasa/faux-person-web
+    AllowedPattern: "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    Description: >-
+      The repository whose workflows may deploy. Each role trusts only its own
+      GitHub environment there: repo:<this>:environment:<staging|production>.
+
+Resources:
+  # Releases are kept 30 days, for reference. Rollback is a revert and a deploy (infra/README.md).
+  ReleaseBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-releases
+            Status: Enabled
+            ExpirationInDays: 30
+
+  ReleaseBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ReleaseBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: HttpsOnly
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt ReleaseBucket.Arn
+              - !Sub "${ReleaseBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+  # 80 for Let's Encrypt and the redirect, 443 for the app. Nothing else, no SSH.
+  # IPv4 only: nginx's per-client limits key on the address (deploy/nginx).
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: apps.tauasa.org - HTTP and HTTPS only
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+
+  # The instance can be managed through Systems Manager and read release packages.
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: read-releases
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${ReleaseBucket.Arn}/*"
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  # IMDSv2 only, an encrypted disk, and standard CPU credits: a t4g launched
+  # "unlimited" bills for sustained CPU, which a flood of requests could run up.
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        CreditSpecification:
+          CpuCredits: standard
+        MetadataOptions:
+          HttpTokens: required
+          HttpEndpoint: enabled
+          HttpPutResponseHopLimit: 1
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: gp3
+              VolumeSize: 16
+              Encrypted: true
+              DeleteOnTermination: true
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: [!GetAtt SecurityGroup.GroupId]
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      Tags:
+        - { Key: Name, Value: apps.tauasa.org }
+        - { Key: app, Value: faux-person-web }
+
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Instance
+      Tags:
+        - { Key: Name, Value: apps.tauasa.org }
+
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      TTL: "300"
+      ResourceRecords: [!Ref ElasticIp]
+
+  # One document per environment, its environment fixed in it, so a role that
+  # may run only staging's document can only deploy staging. Each parameter is
+  # checked by pattern before it reaches the shell.
+  #
+  # Staging's document runs no script from the package: only the commands
+  # below, which swap staging's jar and restart staging. The jar runs as the
+  # unprivileged faux-person-web-staging user, limited to port 8081. The host
+  # (users, unit, nginx) must already be set up by a production deploy.
+  StagingDeployDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Command
+      DocumentFormat: YAML
+      Content:
+        schemaVersion: "2.2"
+        description: Install a faux-person-web jar on staging.
+        parameters:
+          jar:
+            type: String
+            description: The jar's file name under staging/ in the release bucket.
+            allowedPattern: "^faux-person-web-[A-Za-z0-9._-]+\\.jar$"
+        mainSteps:
+          - action: aws:downloadContent
+            name: download
+            inputs:
+              sourceType: S3
+              sourceInfo: !Sub '{"path": "https://${ReleaseBucket.RegionalDomainName}/staging/{{ jar }}"}'
+              destinationPath: /var/tmp/faux-person-web-release/staging
+          - action: aws:runShellScript
+            name: install
+            inputs:
+              timeoutSeconds: "300"
+              runCommand:
+                - set -eu
+                - jar='/var/tmp/faux-person-web-release/staging/{{ jar }}'
+                - "if [ ! -f \"$jar\" ] || [ -L \"$jar\" ]; then echo 'The downloaded jar is missing or a link.' >&2; exit 1; fi"
+                - "id faux-person-web-staging >/dev/null 2>&1 || { echo 'The host is not set up: deploy production once first (infra/README.md).' >&2; exit 1; }"
+                - dir=/opt/faux-person-web/staging
+                - if [ -f "$dir/faux-person-web.jar" ]; then cp -p "$dir/faux-person-web.jar" "$dir/faux-person-web.jar.previous"; fi
+                - install -m 0644 "$jar" "$dir/faux-person-web.jar"
+                - rm -rf /var/tmp/faux-person-web-release/staging
+                - systemctl enable faux-person-web@staging >/dev/null
+                - systemctl restart faux-person-web@staging
+                - for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8081/faux-person-web-staging/health >/dev/null 2>&1 && { echo 'staging is healthy'; exit 0; }; sleep 1; done
+                - journalctl -u faux-person-web@staging -n 40 --no-pager || true
+                - exit 1
+
+  ProductionDeployDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Command
+      DocumentFormat: YAML
+      Content:
+        schemaVersion: "2.2"
+        description: Set up the host and install a faux-person-web release package on production.
+        parameters:
+          package:
+            type: String
+            description: The package's file name under production/ in the release bucket.
+            allowedPattern: "^faux-person-web-[A-Za-z0-9._-]+\\.tar\\.gz$"
+        mainSteps:
+          - action: aws:downloadContent
+            name: download
+            inputs:
+              sourceType: S3
+              sourceInfo: !Sub '{"path": "https://${ReleaseBucket.RegionalDomainName}/production/{{ package }}"}'
+              destinationPath: /var/tmp/faux-person-web-release/production
+          - action: aws:runShellScript
+            name: install
+            inputs:
+              timeoutSeconds: "600"
+              runCommand:
+                - set -eu
+                - cd /var/tmp/faux-person-web-release/production
+                - rm -rf unpacked && mkdir unpacked
+                - tar -xzf '{{ package }}' -C unpacked
+                - bash unpacked/deploy/install.sh
+                - cd / && rm -rf /var/tmp/faux-person-web-release/production
+
+  # GitHub Actions' deploy roles, one per GitHub environment, through the
+  # account's existing OIDC provider (it belongs to the tsj-github-bootstrap stack).
+  StagingDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepository}:environment:staging"
+      Policies:
+        - PolicyName: deploy-staging
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${ReleaseBucket.Arn}/staging/*.jar"
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${StagingDeployDocument}"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${Instance}"
+              - Effect: Allow
+                Action: [ssm:GetCommandInvocation, ssm:ListCommandInvocations]
+                Resource: "*"
+
+  ProductionDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepository}:environment:production"
+      Policies:
+        - PolicyName: deploy-production
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${ReleaseBucket.Arn}/production/*"
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${ProductionDeployDocument}"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${Instance}"
+              - Effect: Allow
+                Action: [ssm:GetCommandInvocation, ssm:ListCommandInvocations]
+                Resource: "*"
+
+Outputs:
+  InstanceId:
+    Value: !Ref Instance
+  PublicIp:
+    Value: !Ref ElasticIp
+  ReleaseBucket:
+    Value: !Ref ReleaseBucket
+  StagingDeployRoleArn:
+    Value: !GetAtt StagingDeployRole.Arn
+  StagingDeployDocument:
+    Value: !Ref StagingDeployDocument
+  ProductionDeployRoleArn:
+    Value: !GetAtt ProductionDeployRole.Arn
+  ProductionDeployDocument:
+    Value: !Ref ProductionDeployDocument
+  StagingUrl:
+    Value: !Sub "https://${DomainName}/faux-person-web-staging"
+  ProductionUrl:
+    Value: !Sub "https://${DomainName}/faux-person-web"
