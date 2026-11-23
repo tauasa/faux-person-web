@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke-tests a running copy: the happy path and the error cases.
+# Smoke-tests a running copy: the happy path, the page's own files and the error cases.
 #   scripts/smoke.sh https://apps.tauasa.org/faux-person-web
 #   scripts/smoke.sh http://127.0.0.1:8080/faux-person-web
 set -u
@@ -28,6 +28,23 @@ check "/people?count=25&seed=42&format=csv" 200
 check "/names?count=3&seed=1&format=json" 200
 check "/companies?count=10&seed=1" 200
 grep -q 'id="shown-seed">1<' "$body" || { echo "FAIL the page did not show its seed"; fail=1; }
+
+# The page's own files, at the addresses the page gives them. Each address
+# must be under this copy's path, and its v must be the hash of what's served.
+path=$(printf '%s' "$base" | sed -E 's#^https?://[^/]+##')
+page=$(cat "$body")
+asset() { # asset <file> <wanted content type>
+  link=$(printf '%s' "$page" | grep -oE "(href|src)=\"[^\"]*/$1(\?[^\"]*)?\"" | head -n 1 | cut -d'"' -f2)
+  case "$link" in
+    "$path/$1?v="?*) ;;
+    *) echo "FAIL the page links $1 as '$link', wanted $path/$1?v=<hash>"; fail=1; return ;;
+  esac
+  check "${link#"$path"}" 200
+  grep -qiE "^content-type: *$2" "$headers" || { echo "FAIL $1 was not $2"; fail=1; }
+  [ "$(shasum -a 256 < "$body" | cut -c1-16)" = "${link##*=}" ] || { echo "FAIL $1 is not the file its address names"; fail=1; }
+}
+asset app.css text/css
+asset app.js text/javascript
 
 check "/people?count=0&format=csv" 400
 check /no-such-page 404
