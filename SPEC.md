@@ -147,6 +147,12 @@ was used.
   body is current. An `If-None-Match` that matches gets `304` before anything
   is generated or rendered. A response to a request without a seed gets
   `Cache-Control: no-store`, because a repeat would pick another seed.
+- **The page's own files** are linked as `/app.css?v=<hash of its content>`, and
+  `/app.js` the same way, so after a release changes a file, a new page doesn't
+  use the copy a browser kept. It's a query, not part of the name, so a page
+  kept from an older release still loads, but with the current release's files:
+  keep them working with the last day's pages. A browser that stored the newer
+  bytes under an older address can still use them briefly after a rollback.
 - **Nothing reaches disk.** nginx proxies without `proxy_cache` and buffers in
   memory (`proxy_max_temp_file_size 0`). The app's `/tmp` is in memory.
 
@@ -340,7 +346,7 @@ instance. These were added; each can be dropped.
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served |
 | `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it

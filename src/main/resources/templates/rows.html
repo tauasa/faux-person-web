@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title th:text="${view.kind().title()} + ' · faux-person-web'">People · faux-person-web</title>
-  <link rel="stylesheet" th:href="@{/app.css}">
-  <script th:src="@{/app.js}" defer></script>
+  <link rel="stylesheet" th:href="@{/app.css(v=${@assets.version('app.css')})}">
+  <script th:src="@{/app.js(v=${@assets.version('app.js')})}" defer></script>
 </head>
 <body th:attr="data-kind=${view.kind().path()}">
 <!-- The header and footer are tauasa.org's: web/index.html in tauasa/tauasa.org. -->
