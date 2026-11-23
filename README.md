@@ -168,6 +168,17 @@ cases, wait a moment and retry; with cURL, `--retry 3` does it for you on
 Needs JDK 17 or later and Maven.
 
 ```bash
+./run.sh                      # builds the jar if needed, then starts the app
+./run.sh --rebuild            # clean build first
+./run.sh --server.port=9090   # other arguments go to the app
+```
+
+Ctrl-C stops it. Use `--rebuild` after deleting a source file.
+`FAUX_WEB_JAVA_OPTS` passes options to the JVM, such as
+`FAUX_WEB_JAVA_OPTS=-Xmx1g`. `run.sh` is for macOS and Linux; anywhere, you
+can use Maven directly:
+
+```bash
 mvn spring-boot:run
 # or
 mvn package && java -jar target/faux-person-web.jar
