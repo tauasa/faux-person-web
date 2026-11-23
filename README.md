@@ -34,9 +34,9 @@ same three kinds, the same controls, the same columns.
      **Tab-delimited** and **JSON** open or download every row as a file.
 3. Press **Generate**.
 
-The table shows 50 rows a page. Click a column header to sort by it, and
-again to reverse it. The page links and **Rows a page** (25, 50, 100, 250)
-are under the table.
+The table shows 50 rows per page. Click a column header to sort by it, and
+again to reverse it. The page links are above and below the table, on the
+right. **Rows per page** (25, 50, 100, 250) is below it, on the left.
 
 **Getting the same rows again.** After you generate, the seed box shows the
 seed behind the rows on screen. Press **Generate** again and you get the same

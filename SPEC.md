@@ -168,14 +168,20 @@ One server-rendered page per kind (Thymeleaf, escaping on). It works without
 JavaScript. A small script adds what the desktop app has and a plain form
 can't do.
 
+- **tauasa.org's header and footer**, copied from its `web/index.html`: the
+  logo and Home, Projects and About links (to `https://tauasa.org/`), and the
+  copyright and social icons, in that site's colors. A change there has to be
+  copied here.
 - **Tabs** Names, Companies, People, as links.
 - **Controls**, in faux-person-fx's order: Count, Region (names and people),
   Seed, a **Random** button that clears the seed, Real companies (companies
   and people), Format, and **Generate**. Region and Real companies show only
   where they apply.
 - **The table.** Each header is a link that sorts by that column, then
-  reverses on a second click, with an arrow on the sorted column. Under it,
-  page links, page size, and "rows 51-100 of 10,000".
+  reverses on a second click, with an arrow on the sorted column. Above it,
+  on one line: the seed, "Rows 51–100 of 10,000" centered, and "Page 2 of 200"
+  with the page links on the right. Below it: rows per page on the left, the
+  same page number and links on the right. On a narrow screen each line stacks.
 - **After generating**, the seed box shows the seed behind the rows, as
   faux-person-fx does.
 - **Seed history.** The seed box offers the seeds this browser used before,
