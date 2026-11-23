@@ -95,16 +95,29 @@ class PageTest extends HttpTest {
     }
 
     @Test
-    void everyPageHasTheSiteHeaderAndFooterAnErrorIncluded() {
+    void thePageAndItsErrorPageHaveTheSiteHeaderAndFooter() {
+        assertEquals(200, get("/people?count=5&seed=1").statusCode());
+        assertEquals(400, get("/people?count=0").statusCode());
         for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
             String html = get(path).body();
-            for (String link : List.of("https://tauasa.org/#home", "https://tauasa.org/#projects",
-                    "https://tauasa.org/#about", "https://github.com/tauasa", "https://www.linkedin.com/in/tauasa/",
-                    "https://www.youtube.com/@tauasa", "https://www.instagram.com/tauasa/",
-                    "https://facebook.com/tauasa")) {
-                assertTrue(html.contains("href=\"" + link + "\""), link + " on " + path);
+            String header = between(html, "<header class=\"site-header\">", "</header>");
+            for (String link : List.of("https://tauasa.org/", "https://tauasa.org/#home",
+                    "https://tauasa.org/#projects", "https://tauasa.org/#about")) {
+                assertTrue(header.contains("href=\"" + link + "\""), link + " on " + path);
             }
+            String footer = between(html, "<footer class=\"site-footer\">", "</footer>");
+            assertTrue(footer.contains("Tauasa Timoteo"), footer);
+            for (String name : List.of("GitHub", "LinkedIn", "YouTube", "Instagram", "Facebook")) {
+                assertTrue(footer.contains("aria-label=\"" + name + "\""), name + " on " + path);
+            }
+            assertFalse(Pattern.compile("<script>|style=\"|onclick=").matcher(html).find(), path);
         }
+    }
+
+    private static String between(String html, String start, String end) {
+        int from = html.indexOf(start);
+        assertTrue(from >= 0, start);
+        return html.substring(from, html.indexOf(end, from));
     }
 
     @Test

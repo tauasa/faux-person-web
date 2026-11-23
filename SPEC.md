@@ -181,7 +181,7 @@ can't do.
   reverses on a second click, with an arrow on the sorted column. Above it,
   on one line: the seed, "Rows 51–100 of 10,000" centered, and "Page 2 of 200"
   with the page links on the right. Below it: rows per page on the left, the
-  same page number and links on the right. On a narrow screen each line stacks.
+  same page number and links on the right. Up to 900px wide the top line stacks.
 - **After generating**, the seed box shows the seed behind the rows, as
   faux-person-fx does.
 - **Seed history.** The seed box offers the seeds this browser used before,
@@ -340,7 +340,7 @@ instance. These were added; each can be dropped.
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served |
 | `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it
