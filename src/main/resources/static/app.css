@@ -174,6 +174,13 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
 }
 .summary .pages { justify-content: flex-end; }
 .summary code { color: var(--fg); font-family: var(--mono); }
+/* A button that's only an icon: after a copy it shows a check mark for a moment. */
+.icon { padding: 4px; border-color: transparent; background: none; color: var(--accent); line-height: 0; vertical-align: middle; }
+.icon:hover { color: var(--accent-hover); border-color: var(--border); }
+.icon svg { display: block; }
+.icon .done, .icon.copied .copy { display: none; }
+.icon.copied .done { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }

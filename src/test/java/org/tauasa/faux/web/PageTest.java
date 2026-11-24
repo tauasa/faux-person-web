@@ -128,12 +128,23 @@ class PageTest extends HttpTest {
         assertTrue(pom.find(), "the pom's version");
         for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
             String line = between(get(path).body(), "<p class=\"build\">", "</p>").replaceAll("<[^>]*>", "");
-            Matcher shown = Pattern.compile("Version\\[Build\\]: v(\\S+) \\[(\\d{8}-\\d{4})\\]").matcher(line);
+            Matcher shown = Pattern.compile("Version\\[Build\\]: v([^\\s\\[]+)\\[(\\d{8}-\\d{4})\\]").matcher(line);
             assertTrue(shown.matches(), line);
             assertEquals(pom.group(1), shown.group(1), path);
             // The page's bytes hold the build time, so the version in every ETag must too.
             assertTrue(environment.getProperty("faux.web.version").endsWith("+" + shown.group(2)), path);
         }
+    }
+
+    /** Hidden until the script finds it can use the clipboard, so nobody gets a button that does nothing. */
+    @Test
+    void theCopyIconFollowsTheSeedAndStartsHidden() {
+        String html = get("/people?count=5&seed=1").body();
+        assertTrue(Pattern.compile("<code id=\"shown-seed\">1</code>\\s*<button type=\"button\" id=\"copy-seed\"[^>]* hidden")
+                .matcher(html).find(), "right after the seed, hidden");
+        assertTrue(Pattern.compile("id=\"copy-seed\"[^>]* aria-label=\"Copy seed\"").matcher(html).find(), "named");
+        assertTrue(html.contains("id=\"seed-copied\" role=\"status\""), "the script needs it, to announce the copy");
+        assertFalse(get("/people?count=0").body().contains("copy-seed"), "no seed to copy on the error page");
     }
 
     private static String between(String html, String start, String end) {

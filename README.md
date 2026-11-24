@@ -42,7 +42,8 @@ right. **Rows per page** (25, 50, 100, 250) is below it, on the left.
 seed behind the rows on screen. Press **Generate** again and you get the same
 rows; press **Random** first to clear it for new ones. Click the seed box to
 pick a seed you used before: up to 20 each for Names, Companies and People.
-That list stays in this browser and is never sent to the server.
+That list stays in this browser and is never sent to the server. The icon
+after the seed above the table copies it.
 
 **The same rows as a file.** Under the table, **The same rows, every one**
 links to the rows on screen in every format, all rows, sorted as the table

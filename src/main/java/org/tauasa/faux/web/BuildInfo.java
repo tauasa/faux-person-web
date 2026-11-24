@@ -13,7 +13,7 @@ public class BuildInfo {
         this.label = label;
     }
 
-    /** Such as {@code v1.2.3 [20260131-1745]}, the time in UTC. */
+    /** Such as {@code v1.2.3[20260131-1745]}, the time in UTC. */
     public String label() {
         return label;
     }
