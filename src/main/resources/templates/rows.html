@@ -77,7 +77,11 @@
 
   <section th:if="${view.table()}" th:with="t=${view.table()}">
     <div class="summary">
-      <span>Seed <code id="shown-seed" th:text="${view.form().seed()}">123</code></span>
+      <span class="seed">Seed <code id="shown-seed" th:text="${view.form().seed()}">123</code>
+        <button type="button" id="copy-seed" class="icon" hidden aria-label="Copy seed" title="Copy seed">
+          <svg class="copy" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+          <svg class="done" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg>
+        </button><span class="sr-only" id="seed-copied" role="status"></span></span>
       <span class="range">Rows <span th:text="${#numbers.formatInteger(t.from(), 1, 'COMMA')}">1</span>–<span
         th:text="${#numbers.formatInteger(t.to(), 1, 'COMMA')}">50</span> of <span
         th:text="${#numbers.formatInteger(t.total(), 1, 'COMMA')}">100</span></span>
@@ -124,7 +128,7 @@
       <p>With cURL:</p>
       <div class="curl">
         <code id="curl" th:text="${view.curl()}">curl '...'</code>
-        <button type="button" id="copy-curl" hidden>Copy</button>
+        <button type="button" id="copy-curl" class="primary" hidden>Copy</button>
       </div>
     </section>
   </section>
@@ -136,7 +140,7 @@
   <a href="https://github.com/tauasa/faux-person">faux-person</a> · MIT license.
   Nothing is stored: rows live in this server's memory until it restarts.
 </p>
-<p class="build">Version[Build]: <span th:text="${@buildInfo.label()}">v1.2.3 [20260131-1745]</span></p>
+<p class="build">Version[Build]: <span th:text="${@buildInfo.label()}">v1.2.3[20260131-1745]</span></p>
 </div>
 </main>
 

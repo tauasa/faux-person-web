@@ -1,5 +1,5 @@
 // faux-person-web's page script. The page works without it; it adds what a
-// plain form can't do: the Random button, the seed history and Copy.
+// plain form can't do: the Random button, the seed history and the Copy buttons.
 // The seed history stays in this browser (localStorage). The server never sees it.
 (function () {
   "use strict";
@@ -48,6 +48,26 @@
     random.addEventListener("click", function () {
       seedBox.value = "";
       seedBox.focus();
+    });
+  }
+
+  var copySeed = document.getElementById("copy-seed");
+  var seedCopied = document.getElementById("seed-copied");
+  if (copySeed && seedCopied && shown && navigator.clipboard) {
+    var seedTimer;
+    copySeed.hidden = false;
+    copySeed.addEventListener("click", function () {
+      navigator.clipboard.writeText(shown.textContent).then(function () {
+        copySeed.classList.add("copied");
+        copySeed.title = "Copied";
+        seedCopied.textContent = "Seed copied";
+        window.clearTimeout(seedTimer);
+        seedTimer = window.setTimeout(function () {
+          copySeed.classList.remove("copied");
+          copySeed.title = "Copy seed";
+          seedCopied.textContent = "";
+        }, 1500);
+      });
     });
   }
 
