@@ -211,12 +211,24 @@ tbody tr:nth-child(even) { background: var(--stripe); }
   font-size: 0.85rem;
 }
 
-.note { max-width: 1200px; margin: 16px auto 0; color: var(--muted); font-size: 0.85rem; }
+.note {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px 24px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.note p { margin: 0; }
+.note .build { flex-shrink: 0; white-space: nowrap; }
 
 /* Below this the seed, rows and page links don't fit on one line. */
 @media (max-width: 900px) {
   .summary { grid-template-columns: 1fr; }
   .summary .pages { justify-content: flex-start; }
+  .note { flex-direction: column; }
+  .note .build { white-space: normal; }
 }
 
 @media (max-height: 400px) {

@@ -142,9 +142,11 @@ was used.
 - **HTTP caching.** Every response for a request that names its seed has a
   strong `ETag` and `Cache-Control: public, max-age=86400, immutable`. The
   ETag is a hash of the request's inputs and the release:
-  `<app version>+faux-person-<version>+<commit>`, the commit set by the deploy
-  (`-Dbuild.id`). A new release gives new ETags, so no client is told an old
-  body is current. An `If-None-Match` that matches gets `304` before anything
+  `<app version>+faux-person-<version>+<commit>+<build time>`, the commit set by
+  the deploy (`-Dbuild.id`). The build time is there because the page shows it.
+  A build from another commit or another minute gives new ETags, so no client
+  is told an old body is current. An `If-None-Match` that matches gets `304`
+  before anything
   is generated or rendered. A response to a request without a seed gets
   `Cache-Control: no-store`, because a repeat would pick another seed.
 - **The page's own files** are linked as `/app.css?v=<hash of its content>`, and
@@ -195,6 +197,10 @@ can't do.
   keeps them in the browser's `localStorage`. The server never sees the list.
 - **Other formats.** Links to the same rows as CSV, pipe, tab-delimited and
   JSON, and the cURL command for the CSV, with a Copy button.
+- **Version and build**, under the panel, on the right of the license note:
+  `Version[Build]: v<app version> [yyyyMMdd-HHmm]`, the time Maven built the
+  jar, in UTC. Up to 900px wide it goes below the note. A browser may show a
+  page it kept, with the older build, for up to a day.
 - **Light and dark** follow the browser's `prefers-color-scheme`.
 
 Not in the first version: faux-person-fx's record dialog on double-click.
@@ -346,7 +352,7 @@ instance. These were added; each can be dropped.
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served |
 | `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it
