@@ -71,6 +71,18 @@ class PageTest extends HttpTest {
         assertEquals(all.get(119), String.join(",", last.get(19)));
     }
 
+    /** The shipped settings: 100 rows, 25 to a page, 5,000 at most. */
+    @Test
+    void aPageOpensOnTwentyFiveOfAHundredRows() {
+        String html = get("/people").body();
+        assertEquals(25, rows(html).size());
+        assertTrue(html.contains("Page 1 of 4"), "100 rows");
+        assertTrue(Pattern.compile("class=\"active\"[^>]*>25</a>").matcher(html).find(), "25 is marked");
+        assertTrue(html.contains("max=\"5000\""), "the count box's limit");
+        assertEquals(200, get("/people?count=5000&seed=1").statusCode());
+        assertEquals(400, get("/people?count=5001&seed=1").statusCode());
+    }
+
     @Test
     void pageLinksAreAboveAndBelowTheTableAndRowsPerPageComesFirstBelow() {
         String html = get("/names?count=120&seed=5&page=2&size=50").body();

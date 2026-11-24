@@ -27,8 +27,8 @@ import org.tauasa.faux.model.Region;
 public record RowsRequest(Kind kind, int count, Long seed, Region region, boolean real, Format format,
         Column sort, boolean descending, int page, int size) {
 
-    /** The page sizes the page offers. The first is the default. */
-    public static final List<Integer> PAGE_SIZES = List.of(50, 25, 100, 250);
+    /** The page sizes the page offers, in order. */
+    public static final List<Integer> PAGE_SIZES = List.of(25, 50, 100, 250);
     public static final String MIXED = "MIXED";
 
     /**
@@ -45,10 +45,10 @@ public record RowsRequest(Kind kind, int count, Long seed, Region region, boolea
         Column sort = sort(kind, params.get("sort"));
         boolean descending = descending(params.get("dir"));
         int page = 1;
-        int size = PAGE_SIZES.get(0);
+        int size = properties.defaultSize();
         if (format == Format.HTML) {
             page = page(params.get("page"));
-            size = size(params.get("size"));
+            size = size(params.get("size"), properties);
         }
         return new RowsRequest(kind, count, seed, region, real, format, sort, descending, page, size);
     }
@@ -155,9 +155,9 @@ public record RowsRequest(Kind kind, int count, Long seed, Region region, boolea
         throw new BadParameterException("page", "page must be a whole number, 1 or more");
     }
 
-    private static int size(String value) {
+    private static int size(String value, FauxWebProperties properties) {
         if (blank(value)) {
-            return PAGE_SIZES.get(0);
+            return properties.defaultSize();
         }
         try {
             int size = Integer.parseInt(value.strip());
@@ -168,6 +168,6 @@ public record RowsRequest(Kind kind, int count, Long seed, Region region, boolea
             // falls through to the message
         }
         throw new BadParameterException("size", "size must be one of: "
-                + PAGE_SIZES.stream().sorted().map(String::valueOf).collect(Collectors.joining(", ")));
+                + PAGE_SIZES.stream().map(String::valueOf).collect(Collectors.joining(", ")));
     }
 }

@@ -22,7 +22,7 @@ same three kinds, the same controls, the same columns.
 1. Open https://apps.tauasa.org/faux-person-web. It opens on **People**; the
    tabs switch to **Names** or **Companies**.
 2. Set the controls:
-   - **Count**: how many rows, 1 to 10,000. 100 to start.
+   - **Count**: how many rows, 1 to 5,000. 100 to start.
    - **Region** (names and people): where first and last names come from.
      **Mixed** draws from all of them.
    - **Seed**: leave it blank for new random rows, or type a whole number to
@@ -34,7 +34,7 @@ same three kinds, the same controls, the same columns.
      **Tab-delimited** and **JSON** open or download every row as a file.
 3. Press **Generate**.
 
-The table shows 50 rows per page. Click a column header to sort by it, and
+The table shows 25 rows per page to start. Click a column header to sort by it, and
 again to reverse it. The page links are above and below the table, on the
 right. **Rows per page** (25, 50, 100, 250) is below it, on the left.
 
@@ -91,7 +91,7 @@ curl 'https://apps.tauasa.org/faux-person-web/people?count=20&format=csv&seed=-3
 
 | Parameter | Values | Default | Applies to |
 |---|---|---|---|
-| `count` | 1 to 10,000 | 100 | all |
+| `count` | 1 to 5,000 | 100 | all |
 | `seed` | any whole number from -9223372036854775808 to 9223372036854775807 | a random one | all |
 | `region` | `MIXED`, or one of `WESTERN`, `ASIA`, `RUS`, `ROK`, `MEX`, `IRN`, `HEB`, `PSE`, `JPN`, `PHL`, `VNM`, `THA`, `NAF`, `CAF`, `SAF`, `BRA`, `GBR`, `FRA`, `ESP`, `PRT`, `GRC`, `NOR`, `SWE`, `FIN` (any case) | `MIXED` | names, people |
 | `real` | `true`, `false` | `false` | companies, people |
@@ -99,7 +99,7 @@ curl 'https://apps.tauasa.org/faux-person-web/people?count=20&format=csv&seed=-3
 | `sort` | a column key (below) | `lastName` (names, people), `name` (companies) | all |
 | `dir` | `asc`, `desc` | `asc` | all |
 | `page` | 1 or more | 1 | `html` only |
-| `size` | 25, 50, 100, 250 | 50 | `html` only |
+| `size` | 25, 50, 100, 250 | 25 | `html` only |
 
 A parameter that doesn't apply is ignored, so `region` does nothing on
 `/companies`.
@@ -138,7 +138,7 @@ saying which parameter and what it takes:
 
 ```bash
 curl 'https://apps.tauasa.org/faux-person-web/people?count=20000&format=csv'
-# 400 Bad Request: count must be a whole number from 1 to 10000
+# 400 Bad Request: count must be a whole number from 1 to 5000
 ```
 
 **Caching.** A response for a request with a seed doesn't change while the same
@@ -192,15 +192,16 @@ listens on 127.0.0.1 only; on the server, nginx is the way in.
 ## Settings
 
 `src/main/resources/application.properties`, or any Spring Boot way of
-setting a property: `--faux.web.max-count=5000` on the command line, or
-`FAUX_WEB_MAX_COUNT=5000` in the environment. On the server, add the
+setting a property: `--faux.web.max-count=2000` on the command line, or
+`FAUX_WEB_MAX_COUNT=2000` in the environment. On the server, add the
 environment variable to `deploy/env/production.env` or `staging.env`; the
 next production deploy installs both.
 
 | Property | Default | Does |
 |---|---|---|
 | `faux.web.default-count` | 100 | The count when a request gives none |
-| `faux.web.max-count` | 10000 | The most rows one request may ask for |
+| `faux.web.max-count` | 5000 | The most rows one request may ask for |
+| `faux.web.default-size` | 25 | Rows per page when a request gives none: 25, 50, 100 or 250 |
 | `faux.web.cache.max-rows` | 200000 | The rows the in-memory caches hold, generated and sorted together. Past it, the least-used are dropped and made again if asked for, the same as before |
 | `faux.web.cache.max-body-bytes` | 67108864 | The bytes of finished files (CSV and the rest) held, 64 MB |
 | `faux.web.max-concurrent` | 4 | New results built at once. Others wait for a turn |
@@ -208,7 +209,8 @@ next production deploy installs both.
 | `server.port` | 8080 | |
 | `server.servlet.context-path` | `/faux-person-web` | |
 
-The app won't start with a default count outside 1 to `max-count`, a
+The app won't start with a default count outside 1 to `max-count`, a default
+size the page doesn't offer, a
 ceiling or `max-concurrent` under 1, or a negative wait.
 
 ## Build and test

@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  *
  * @param defaultCount the count when a request gives none
  * @param maxCount     the most rows one request may ask for
+ * @param defaultSize  the rows per page when a request gives none, one of the sizes the page offers
  * @param cache         the in-memory caches' ceilings
  * @param version       the build's version, part of every ETag
  * @param maxConcurrent how many cache misses may be built at once
@@ -17,7 +18,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties("faux.web")
 public record FauxWebProperties(
         @DefaultValue("100") int defaultCount,
-        @DefaultValue("10000") int maxCount,
+        @DefaultValue("5000") int maxCount,
+        @DefaultValue("25") int defaultSize,
         @DefaultValue Cache cache,
         @DefaultValue("dev") String version,
         @DefaultValue("4") int maxConcurrent,
@@ -32,6 +34,10 @@ public record FauxWebProperties(
         }
         if (maxCount < 1) {
             throw new IllegalArgumentException("faux.web.max-count must be 1 or more: " + maxCount);
+        }
+        if (!RowsRequest.PAGE_SIZES.contains(defaultSize)) {
+            throw new IllegalArgumentException(
+                    "faux.web.default-size must be one of " + RowsRequest.PAGE_SIZES + ": " + defaultSize);
         }
         if (defaultCount < 1 || defaultCount > maxCount) {
             throw new IllegalArgumentException(

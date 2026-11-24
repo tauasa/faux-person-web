@@ -107,10 +107,10 @@ class RowsControllerTest extends HttpTest {
 
     @Test
     void aBadParameterIsA400NamingItAsPlainTextForExports() {
-        HttpResponse<String> r = get("/people?count=10001&format=csv");
+        HttpResponse<String> r = get("/people?count=5001&format=csv");
         assertEquals(400, r.statusCode());
         assertTrue(header(r, "Content-Type").startsWith("text/plain"));
-        assertEquals("400 Bad Request: count must be a whole number from 1 to 10000\n", r.body());
+        assertEquals("400 Bad Request: count must be a whole number from 1 to 5000\n", r.body());
 
         HttpResponse<String> format = get("/people?format=xml");
         assertEquals(400, format.statusCode());

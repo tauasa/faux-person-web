@@ -16,7 +16,7 @@ import org.tauasa.faux.model.Region;
 class RowsRequestTest {
 
     private static final FauxWebProperties PROPS =
-            new FauxWebProperties(100, 10_000, new FauxWebProperties.Cache(1000, 1000), "test", 4, 2000);
+            new FauxWebProperties(100, 5_000, 25, new FauxWebProperties.Cache(1000, 1000), "test", 4, 2000);
 
     @Test
     void anEmptyRequestTakesTheDefaults() {
@@ -29,15 +29,15 @@ class RowsRequestTest {
         assertEquals("lastName", r.sort().key());
         assertFalse(r.descending());
         assertEquals(1, r.page());
-        assertEquals(50, r.size());
+        assertEquals(25, r.size());
     }
 
     @Test
     void readsEveryParameter() {
-        RowsRequest r = RowsRequest.parse(Kind.PEOPLE, Map.of("count", "10000", "seed", "-5", "region", "jpn",
+        RowsRequest r = RowsRequest.parse(Kind.PEOPLE, Map.of("count", "5000", "seed", "-5", "region", "jpn",
                 "real", "TRUE", "format", "html", "sort", "dateOfBirth", "dir", "desc", "page", "3", "size", "250"),
                 PROPS);
-        assertEquals(10_000, r.count());
+        assertEquals(5_000, r.count());
         assertEquals(-5L, r.seed());
         assertEquals(Region.JPN, r.region());
         assertTrue(r.real());
@@ -49,7 +49,7 @@ class RowsRequestTest {
 
     @ParameterizedTest
     @CsvSource({
-            "count, 0", "count, 10001", "count, ten", "count, 1.5",
+            "count, 0", "count, 5001", "count, ten", "count, 1.5",
             "seed, 12x", "seed, 99999999999999999999",
             "region, MARS",
             "real, yes",
@@ -67,11 +67,19 @@ class RowsRequestTest {
 
     @Test
     void theCountLimitComesFromTheSettings() {
-        FauxWebProperties small = new FauxWebProperties(5, 20, new FauxWebProperties.Cache(1000, 1000), "test", 4, 2000);
+        FauxWebProperties small = new FauxWebProperties(5, 20, 25, new FauxWebProperties.Cache(1000, 1000), "test", 4, 2000);
         assertEquals(5, RowsRequest.parse(Kind.NAMES, Map.of(), small).count());
         BadParameterException e = assertThrows(BadParameterException.class,
                 () -> RowsRequest.parse(Kind.NAMES, Map.of("count", "21"), small));
         assertEquals("count must be a whole number from 1 to 20", e.getMessage());
+    }
+
+    @Test
+    void theDefaultRowsPerPageComesFromTheSettings() {
+        FauxWebProperties large = new FauxWebProperties(5, 20, 100, new FauxWebProperties.Cache(1000, 1000), "test", 4, 2000);
+        assertEquals(100, RowsRequest.parse(Kind.NAMES, Map.of(), large).size());
+        assertEquals(100, RowsRequest.parse(Kind.NAMES, Map.of("size", " "), large).size());
+        assertEquals(50, RowsRequest.parse(Kind.NAMES, Map.of("size", "50"), large).size());
     }
 
     @Test
@@ -94,9 +102,12 @@ class RowsRequestTest {
     @Test
     void theAppRefusesSettingsThatMakeNoSense() {
         FauxWebProperties.Cache cache = new FauxWebProperties.Cache(1, 1);
-        assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(0, 10, cache, "v", 4, 2000));
-        assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(11, 10, cache, "v", 4, 2000));
-        assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(1, 0, cache, "v", 4, 2000));
+        assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(0, 10, 25, cache, "v", 4, 2000));
+        assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(11, 10, 25, cache, "v", 4, 2000));
+        assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(1, 0, 25, cache, "v", 4, 2000));
+        for (int size : new int[] {0, 30, 251}) {
+            assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties(1, 10, size, cache, "v", 4, 2000));
+        }
         assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties.Cache(0, 1));
         assertThrows(IllegalArgumentException.class, () -> new FauxWebProperties.Cache(1, 0));
     }
