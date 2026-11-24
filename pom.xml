@@ -13,7 +13,7 @@
 
   <groupId>org.tauasa</groupId>
   <artifactId>faux-person-web</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
 
   <name>faux-person-web</name>
