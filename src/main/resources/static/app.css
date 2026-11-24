@@ -6,6 +6,7 @@
   --muted: #5f6368;
   --border: #d9dbdf;
   --accent: #2f6fde;
+  --accent-hover: #1c4a9e;
   --accent-fg: #ffffff;
   --stripe: #f1f3f6;
   --error-bg: #fdecea;
@@ -22,6 +23,7 @@
     --muted: #a3a7ad;
     --border: #3a3e44;
     --accent: #6c9ef8;
+    --accent-hover: #b4cfff;
     --accent-fg: #0f1114;
     --stripe: #2a2e33;
     --error-bg: #4a1c18;
@@ -193,10 +195,15 @@ tbody tr:nth-child(even) { background: var(--stripe); }
   display: inline-block;
   margin: 0 6px 6px 0;
   padding: 4px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent);
   border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
   text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
 }
+.pill:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .curl { display: flex; gap: 8px; align-items: flex-start; }
 .curl code {
   flex: 1;
