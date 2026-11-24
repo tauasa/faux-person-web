@@ -78,7 +78,7 @@ public record PageView(Kind kind, List<Tab> tabs, Form form, Table table, List<D
     public static PageView error(Kind kind, FauxWebProperties properties, String message) {
         Form form = new Form(kind.path(), properties.defaultCount(), properties.maxCount(), "", kind.usesRegion(),
                 regions(null), kind.usesReal(), false, formats(Format.HTML), kind.defaultSort().key(), "asc",
-                RowsRequest.PAGE_SIZES.get(0));
+                properties.defaultSize());
         return new PageView(kind, tabs(kind), form, null, List.of(), null, message);
     }
 }

@@ -144,7 +144,7 @@ public class RowsController {
             pageLinks.add(new PageView.PageLink("Next", links.page(sortKey, request.descending(), page + 1, size)));
             pageLinks.add(new PageView.PageLink("Last", links.page(sortKey, request.descending(), pages, size)));
         }
-        List<PageView.Option> sizeLinks = RowsRequest.PAGE_SIZES.stream().sorted()
+        List<PageView.Option> sizeLinks = RowsRequest.PAGE_SIZES.stream()
                 .map(s -> new PageView.Option(links.page(sortKey, request.descending(), 1, s), String.valueOf(s),
                         s == size))
                 .toList();

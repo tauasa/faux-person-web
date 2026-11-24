@@ -18,7 +18,7 @@ It runs on one EC2 instance behind nginx, at
 | Nothing written to disk | Results live only in memory. No temp files, no disk cache in nginx. A restart empties the cache |
 | Idempotent | On one release of the app, the same inputs, seed included, give byte-for-byte the same output, on any day, before and after a restart |
 | Cached | Once made, a result is served from memory without generating it again |
-| Bounded | At most `faux.web.max-count` rows a request (default 10,000), 100 by default. The cache has a ceiling, and only a few cache misses are built at once |
+| Bounded | At most `faux.web.max-count` rows a request (default 5,000), 100 by default. The cache has a ceiling, and only a few cache misses are built at once |
 
 **Why "on one release".** A release can change the output: a fix to an export
 format, or a newer faux-person. So the promise holds per release, and every
@@ -63,7 +63,7 @@ from it.
 | `sort` | a column key | the kind's default column | all |
 | `dir` | `asc`, `desc` | `asc` | all |
 | `page` | 1 to the last page | 1 | `html` only |
-| `size` | 25, 50, 100, 250 | 50 | `html` only |
+| `size` | 25, 50, 100, 250 | `faux.web.default-size` (25) | `html` only |
 
 A parameter that doesn't apply to the kind is ignored, as in faux-person-fx.
 A bad value (a count over the limit, a seed that isn't a number, an unknown
@@ -164,7 +164,8 @@ the socket, and an HTML page still renders its template.
 
 ### Memory, measured
 
-With a 384 MB heap, 30 distinct 10,000-person requests in JSON and CSV (past
+Measured while `max-count` was 10,000, and not again since: single requests are
+smaller now, and the cache ceilings are the same. With a 384 MB heap, 30 distinct 10,000-person requests in JSON and CSV (past
 both ceilings) left 180 MB of heap live after a full collection, and eight
 more 10,000-person requests at once all succeeded. The process used 555 MB.
 So each environment runs with `-Xmx384m` and systemd's `MemoryMax=768M`, and
@@ -187,7 +188,7 @@ can't do.
   where they apply.
 - **The table.** Each header is a link that sorts by that column, then
   reverses on a second click, with an arrow on the sorted column. Above it,
-  on one line: the seed, "Rows 51–100 of 10,000" centered, and "Page 2 of 200"
+  on one line: the seed, "Rows 26–50 of 5,000" centered, and "Page 2 of 200"
   with the page links on the right. Below it: rows per page on the left, the
   same page number and links on the right. Up to 900px wide the top line stacks.
 - **After generating**, the seed box shows the seed behind the rows, as
@@ -283,13 +284,14 @@ anyone.
 
 `src/main/resources/application.properties`, or any Spring Boot way of
 setting a property. On the server, set one as an environment variable in
-`deploy/env/<environment>.env` (`FAUX_WEB_MAX_COUNT=5000`), which the next
+`deploy/env/<environment>.env` (`FAUX_WEB_MAX_COUNT=2000`), which the next
 production deploy installs.
 
 | Property | Default | Does |
 |---|---|---|
 | `faux.web.default-count` | 100 | The count when none is given |
-| `faux.web.max-count` | 10000 | The most rows one request may ask for |
+| `faux.web.max-count` | 5000 | The most rows one request may ask for |
+| `faux.web.default-size` | 25 | Rows per page when a request gives none: 25, 50, 100 or 250 |
 | `faux.web.cache.max-rows` | 200000 | The rows the row and sorted caches hold together |
 | `faux.web.cache.max-body-bytes` | 67108864 | The bytes the body cache holds |
 | `faux.web.max-concurrent` | 4 | Cache misses built at once |
@@ -297,7 +299,8 @@ production deploy installs.
 | `server.port` | 8080 | Staging uses 8081 |
 | `server.servlet.context-path` | `/faux-person-web` | Staging uses `/faux-person-web-staging` |
 
-The app refuses to start if `default-count` isn't from 1 to `max-count`, a
+The app refuses to start if `default-count` isn't from 1 to `max-count`,
+`default-size` isn't a size the page offers, a
 ceiling or `max-concurrent` isn't positive, or `max-wait-millis` is negative.
 
 ## Hosting
@@ -349,7 +352,7 @@ instance. These were added; each can be dropped.
 | Test | Protects |
 |---|---|
 | `GenerationTest` | The same key gives equal rows from separate generators; people don't depend on today's date; parameters that don't apply can't split the cache |
-| `RowsRequestTest` | Defaults, the count limit, bad seeds, regions, sort keys, formats, pages and sizes are refused with the parameter named; settings that make no sense stop the app |
+| `RowsRequestTest` | Defaults, the count limit, bad seeds, regions, sort keys, formats, pages and sizes are refused with the parameter named; settings that make no sense stop the app; the default rows per page comes from the settings, and must be a size the page offers |
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served |
 | `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address |

@@ -130,7 +130,7 @@ aws sts get-caller-identity --profile tauasa
 
 The app's settings (SPEC.md, Configuration) are environment variables in
 `deploy/env/production.env` and `deploy/env/staging.env`. Add one there, for
-example `FAUX_WEB_MAX_COUNT=5000`, merge, and run a production deploy: it
+example `FAUX_WEB_MAX_COUNT=2000`, merge, and run a production deploy: it
 installs both files. Staging picks up its file at its next restart, which its
 next deploy does.
 

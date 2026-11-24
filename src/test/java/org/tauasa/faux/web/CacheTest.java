@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class CacheTest {
 
     private static RowStore store(long maxRows, long maxBytes) {
-        return new RowStore(new FauxWebProperties(100, 10_000, new FauxWebProperties.Cache(maxRows, maxBytes), "t", 4, 2000));
+        return new RowStore(new FauxWebProperties(100, 5_000, 25, new FauxWebProperties.Cache(maxRows, maxBytes), "t", 4, 2000));
     }
 
     private static RowsKey.Sorted sorted(long seed, String sort, boolean desc) {
@@ -89,7 +89,7 @@ class CacheTest {
 
     @Test
     void whenEveryPermitIsTakenAMissIsRefusedButAHitIsServed() throws Exception {
-        RowStore store = new RowStore(new FauxWebProperties(100, 10_000,
+        RowStore store = new RowStore(new FauxWebProperties(100, 5_000, 25,
                 new FauxWebProperties.Cache(100_000, 10_000_000), "t", 2, 50));
         RowsKey cached = new RowsKey(Kind.NAMES, 10, 1L, null, false);
         store.rows(cached);
