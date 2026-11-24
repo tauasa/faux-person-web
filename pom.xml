@@ -13,7 +13,7 @@
 
   <groupId>org.tauasa</groupId>
   <artifactId>faux-person-web</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>faux-person-web</name>
@@ -26,6 +26,10 @@
     <faux-person.version>0.2.0</faux-person.version>
     <!-- The commit a release is built from. deploy.yml sets it (-Dbuild.id=<sha>); it goes into every ETag. -->
     <build.id>local</build.id>
+    <!-- When the build ran, in UTC. The page shows it, and it goes into every ETag.
+         Resources can't use maven.build.timestamp itself, only a property set from it. -->
+    <maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
+    <build.time>${maven.build.timestamp}</build.time>
   </properties>
 
   <dependencies>

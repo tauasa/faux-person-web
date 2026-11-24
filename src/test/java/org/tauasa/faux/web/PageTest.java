@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,6 +118,21 @@ class PageTest extends HttpTest {
                 assertTrue(footer.contains("aria-label=\"" + name + "\""), name + " on " + path);
             }
             assertFalse(Pattern.compile("<script>|style=\"|onclick=").matcher(html).find(), path);
+        }
+    }
+
+    @Test
+    void thePageAndItsErrorPageShowTheVersionAndWhenItWasBuilt() throws IOException {
+        Matcher pom = Pattern.compile("<artifactId>faux-person-web</artifactId>\\s*<version>([^<]+)</version>")
+                .matcher(Files.readString(Path.of("pom.xml")));
+        assertTrue(pom.find(), "the pom's version");
+        for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
+            String line = between(get(path).body(), "<p class=\"build\">", "</p>").replaceAll("<[^>]*>", "");
+            Matcher shown = Pattern.compile("Version\\[Build\\]: v(\\S+) \\[(\\d{8}-\\d{4})\\]").matcher(line);
+            assertTrue(shown.matches(), line);
+            assertEquals(pom.group(1), shown.group(1), path);
+            // The page's bytes hold the build time, so the version in every ETag must too.
+            assertTrue(environment.getProperty("faux.web.version").endsWith("+" + shown.group(2)), path);
         }
     }
 
