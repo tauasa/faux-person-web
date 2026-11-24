@@ -195,8 +195,9 @@ can't do.
 - **Seed history.** The seed box offers the seeds this browser used before,
   newest first: up to 20 each for Names, Companies and People. The script
   keeps them in the browser's `localStorage`. The server never sees the list.
-- **Other formats.** Links to the same rows as CSV, pipe, tab-delimited and
-  JSON, and the cURL command for the CSV, with a Copy button.
+- **Other formats.** Filled buttons that change color on hover, linking to the
+  same rows as CSV, pipe, tab-delimited and JSON, and the cURL command for the
+  CSV, with a Copy button.
 - **Version and build**, under the panel, on the right of the license note:
   `Version[Build]: v<app version> [yyyyMMdd-HHmm]`, the time Maven built the
   jar, in UTC. Up to 900px wide it goes below the note. A browser may show a
