@@ -159,6 +159,16 @@ class PageTest extends HttpTest {
         assertFalse(get("/people?count=0").body().contains("copy-seed"), "no seed to copy on the error page");
     }
 
+    @Test
+    void thePageOffersEveryFormatInAZip() {
+        String html = get("/people?count=5&seed=1").body();
+        assertTrue(html.contains("type=\"checkbox\" name=\"zip\" value=\"true\""), "an option on the form");
+        for (String format : List.of("csv", "psv", "tsv", "json")) {
+            assertTrue(html.contains("format=" + format + "&amp;zip=true\""), format);
+            assertTrue(html.contains("format=" + format + "\""), format + " unzipped");
+        }
+    }
+
     private static String between(String html, String start, String end) {
         int from = html.indexOf(start);
         assertTrue(from >= 0, start);

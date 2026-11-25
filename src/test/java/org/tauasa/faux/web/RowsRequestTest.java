@@ -66,6 +66,16 @@ class RowsRequestTest {
     }
 
     @Test
+    void zipIsTrueOrFalseForAnExport() {
+        assertTrue(RowsRequest.parse(Kind.NAMES, Map.of("format", "csv", "zip", "TRUE"), PROPS).zip());
+        assertFalse(RowsRequest.parse(Kind.NAMES, Map.of("format", "csv", "zip", "false"), PROPS).zip());
+        assertFalse(RowsRequest.parse(Kind.NAMES, Map.of("format", "csv"), PROPS).zip());
+        BadParameterException e = assertThrows(BadParameterException.class,
+                () -> RowsRequest.parse(Kind.NAMES, Map.of("format", "csv", "zip", "maybe"), PROPS));
+        assertEquals("zip must be true or false", e.getMessage());
+    }
+
+    @Test
     void theCountLimitComesFromTheSettings() {
         FauxWebProperties small = new FauxWebProperties(5, 20, 25, new FauxWebProperties.Cache(1000, 1000), "test", 4, 2000);
         assertEquals(5, RowsRequest.parse(Kind.NAMES, Map.of(), small).count());
@@ -88,6 +98,8 @@ class RowsRequestTest {
         assertNull(companies.region());
         RowsRequest names = RowsRequest.parse(Kind.NAMES, Map.of("real", "maybe"), PROPS);
         assertFalse(names.real());
+        RowsRequest page = RowsRequest.parse(Kind.NAMES, Map.of("zip", "maybe"), PROPS);
+        assertFalse(page.zip(), "the page is never zipped");
         RowsRequest csv = RowsRequest.parse(Kind.NAMES, Map.of("format", "csv", "page", "zero", "size", "7"), PROPS);
         assertEquals(1, csv.page());
     }

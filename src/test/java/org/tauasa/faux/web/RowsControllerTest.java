@@ -1,14 +1,20 @@
 package org.tauasa.faux.web;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.TimeZone;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +34,50 @@ class RowsControllerTest extends HttpTest {
         assertEquals(type, header(r, "Content-Type"));
         assertEquals("inline; filename=\"" + file + "\"", header(r, "Content-Disposition"));
         assertEquals("42", header(r, RowsController.SEED_HEADER));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"csv", "psv", "tsv", "json"})
+    void aZipHoldsTheSameFileAndNothingElse(String format) throws IOException {
+        String path = "/people?count=60&seed=42&format=" + format;
+        HttpResponse<byte[]> zipped = getBytes(path + "&zip=true");
+        assertEquals(200, zipped.statusCode());
+        assertEquals("application/zip", header(zipped, "Content-Type"));
+        assertEquals("attachment; filename=\"people-42." + format + ".zip\"", header(zipped, "Content-Disposition"));
+        assertEquals("42", header(zipped, RowsController.SEED_HEADER));
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipped.body()))) {
+            ZipEntry entry = zip.getNextEntry();
+            assertEquals("people-42." + format, entry.getName());
+            assertArrayEquals(getBytes(path).body(), zip.readAllBytes());
+            assertNull(zip.getNextEntry(), "one file");
+        }
+    }
+
+    @Test
+    void aZipHasItsOwnETagAndCanBeNotModified() {
+        String path = "/names?count=10&seed=4&format=csv";
+        HttpResponse<byte[]> zip = getBytes(path + "&zip=true");
+        String etag = header(zip, "ETag");
+        assertNotEquals(header(get(path), "ETag"), etag);
+        assertEquals(header(get(path), "ETag"), header(get(path + "&zip=false"), "ETag"));
+        assertEquals(304, getBytes(path + "&zip=true", "If-None-Match", etag).statusCode());
+        assertEquals("no-store", header(getBytes("/names?count=5&format=csv&zip=true"), "Cache-Control"));
+        assertEquals(400, get(path + "&zip=maybe").statusCode());
+    }
+
+    /** The bytes behind a strong ETag can't depend on when or where the archive was made. */
+    @Test
+    void theSameFileGivesTheSameZipInAnyTimeZone() {
+        byte[] file = "a,b\r\n".repeat(50).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        TimeZone before = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Pacific/Apia"));
+            byte[] apia = Exporter.zip("x.csv", file);
+            TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
+            assertArrayEquals(apia, Exporter.zip("x.csv", file));
+        } finally {
+            TimeZone.setDefault(before);
+        }
     }
 
     @Test

@@ -37,14 +37,25 @@ class CacheTest {
     @Test
     void sortedOrdersAndBodiesAreMadeOnceAndShareTheGeneratedRows() {
         RowStore store = store(100_000, 10_000_000);
-        RowsKey.Body csv = new RowsKey.Body(sorted(9L, "email", true), Format.CSV);
+        RowsKey.Body csv = new RowsKey.Body(sorted(9L, "email", true), Format.CSV, false);
         byte[] first = store.body(csv);
         byte[] second = store.body(csv);
         assertSame(first, second);
-        store.body(new RowsKey.Body(sorted(9L, "email", true), Format.JSON));
+        store.body(new RowsKey.Body(sorted(9L, "email", true), Format.JSON, false));
         store.sorted(sorted(9L, "city", false));
         assertEquals(1, store.generations(), "every order and format came from one generation");
         assertEquals(2, store.renders(), "CSV once, JSON once");
+    }
+
+    @Test
+    void aZipIsItsOwnBodyMadeOnceFromTheSameRows() {
+        RowStore store = store(100_000, 10_000_000);
+        byte[] plain = store.body(new RowsKey.Body(sorted(9L, "email", true), Format.CSV, false));
+        byte[] zip = store.body(new RowsKey.Body(sorted(9L, "email", true), Format.CSV, true));
+        assertSame(zip, store.body(new RowsKey.Body(sorted(9L, "email", true), Format.CSV, true)));
+        assertTrue(zip.length < plain.length, "compressed: " + zip.length + " of " + plain.length);
+        assertEquals(1, store.generations());
+        assertEquals(2, store.renders());
     }
 
     @Test
@@ -71,7 +82,7 @@ class CacheTest {
     @Test
     void aRestartedStoreMakesTheSameBytes() {
         // A restart empties the cache; what's made again must be what was there.
-        RowsKey.Body key = new RowsKey.Body(sorted(5L, "lastName", false), Format.CSV);
+        RowsKey.Body key = new RowsKey.Body(sorted(5L, "lastName", false), Format.CSV, false);
         byte[] before = store(100_000, 10_000_000).body(key);
         byte[] after = store(100_000, 10_000_000).body(key);
         assertEquals(new String(before), new String(after));
@@ -81,7 +92,7 @@ class CacheTest {
     void theBodyCeilingHoldsToo() {
         RowStore store = store(100_000, 50_000);
         for (long seed = 0; seed < 20; seed++) {
-            store.body(new RowsKey.Body(sorted(seed, "lastName", false), Format.JSON));
+            store.body(new RowsKey.Body(sorted(seed, "lastName", false), Format.JSON, false));
         }
         assertEquals(20, store.renders());
         assertTrue(store.bodyBytesHeld() <= 50_000, "held " + store.bodyBytesHeld());

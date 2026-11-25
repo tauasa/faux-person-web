@@ -96,7 +96,8 @@ public class RowStore {
         List<?> sorted = buildSorted(key.sorted());
         return bodies.get(key, k -> {
             renders.incrementAndGet();
-            return Exporter.bytes(key.sorted().rows().kind().columns(), sorted, key.format());
+            byte[] file = Exporter.bytes(key.sorted().rows().kind().columns(), sorted, key.format());
+            return key.zip() ? Exporter.zip(key.fileName(), file) : file;
         });
     }
 

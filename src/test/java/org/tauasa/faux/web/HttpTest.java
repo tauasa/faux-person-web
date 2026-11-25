@@ -48,6 +48,22 @@ abstract class HttpTest {
         }
     }
 
+    /** A GET whose body is bytes, not text. */
+    HttpResponse<byte[]> getBytes(String path, String... headers) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(base() + path)).GET();
+        for (int i = 0; i < headers.length; i += 2) {
+            builder.header(headers[i], headers[i + 1]);
+        }
+        try {
+            return CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
+    }
+
     static String header(HttpResponse<?> response, String name) {
         return response.headers().firstValue(name).orElse(null);
     }

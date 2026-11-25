@@ -1,12 +1,16 @@
 package org.tauasa.faux.web;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Writes rows as CSV, pipe-delimited, tab-delimited or JSON, one field per
@@ -25,7 +29,25 @@ import java.util.List;
  */
 public final class Exporter {
 
+    /** The date every file in an archive carries, so the same file always gives the same archive. */
+    private static final LocalDateTime ZIP_DATE = LocalDateTime.of(2026, 1, 1, 0, 0);
+
     private Exporter() {
+    }
+
+    /** A zip archive holding one file, made in memory. The same file gives the same bytes on one Java runtime. */
+    public static byte[] zip(String fileName, byte[] file) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(file.length / 2 + 256);
+        try (ZipOutputStream zip = new ZipOutputStream(out, StandardCharsets.UTF_8)) {
+            ZipEntry entry = new ZipEntry(fileName);
+            entry.setTimeLocal(ZIP_DATE);
+            zip.putNextEntry(entry);
+            zip.write(file);
+            zip.closeEntry();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e); // a ByteArrayOutputStream never throws
+        }
+        return out.toByteArray();
     }
 
     /** The whole body, as UTF-8 bytes with no byte-order mark. */

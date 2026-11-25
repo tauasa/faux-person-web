@@ -60,6 +60,7 @@ from it.
 | `region` | `MIXED` or a faux-person `Region` name, any case | `MIXED` | names, people |
 | `real` | `true` or `false` | `false`: employers are `[faux]` under `.example` | companies, people |
 | `format` | `html`, `csv`, `psv`, `tsv`, `json` | `html` | all |
+| `zip` | `true` or `false` | `false` | every format but `html` |
 | `sort` | a column key | the kind's default column | all |
 | `dir` | `asc`, `desc` | `asc` | all |
 | `page` | 1 to the last page | 1 | `html` only |
@@ -102,9 +103,17 @@ to build a cache miss, the answer is `503` with `Retry-After: 2`.
 | `json` | `application/json` | An array of objects keyed by column key. Strings, and dates as `YYYY-MM-DD` strings |
 
 The non-HTML formats hold every row, sorted by `sort` and `dir`, with no
-paging. They carry `Content-Disposition: inline; filename="<kind>-<seed>.<ext>"`,
+paging. Unless zipped, they carry
+`Content-Disposition: inline; filename="<kind>-<seed>.<ext>"`,
 so a browser that saves one names it usefully. All files are UTF-8 with no
 byte-order mark.
+
+**Zipped.** With `zip=true` the response is `application/zip`, as an
+`attachment` named `<kind>-<seed>.<ext>.zip`, and holds one file, the same
+bytes as without it. The archive is made in memory. The file in it is always
+dated 2026-01-01 00:00, so the same request gives the same archive on the same
+Java runtime. A Java or zlib update can compress it differently under the same
+ETag; the file inside stays the same.
 
 The CSV, pipe and JSON writers are faux-person-fx's `Exporter`, extended with
 tab-delimited output.
@@ -119,7 +128,7 @@ was used.
 |---|---|---|---|
 | Rows | kind, count, seed, region, real | The generated rows | Row count |
 | Sorted | rows key + sort + dir | The same rows in that order (references, not copies) | Row count |
-| Bodies | sorted key + format (not `html`) | The finished body bytes | Bytes |
+| Bodies | sorted key + format (not `html`) + zip | The finished body bytes | Bytes |
 
 - **One generation per key.** Concurrent requests for the same key wait on
   one computation instead of each running it.
@@ -184,7 +193,7 @@ can't do.
 - **Tabs** Names, Companies, People, as links.
 - **Controls**, in faux-person-fx's order: Count, Region (names and people),
   Seed, a **Random** button that clears the seed, Real companies (companies
-  and people), Format, and **Generate**. Region and Real companies show only
+  and people), Format, Zip file, and **Generate**. Region and Real companies show only
   where they apply.
 - **The table.** Each header is a link that sorts by that column, then
   reverses on a second click, with an arrow on the sorted column. Above it,
@@ -200,8 +209,9 @@ can't do.
   newest first: up to 20 each for Names, Companies and People. The script
   keeps them in the browser's `localStorage`. The server never sees the list.
 - **Other formats.** Filled buttons that change color on hover, linking to the
-  same rows as CSV, pipe, tab-delimited and JSON, and the cURL command for the
-  CSV, with a Copy button.
+  same rows as CSV, pipe, tab-delimited and JSON, a second row of them for each
+  in a zip file, and the cURL command for the CSV, with a Copy button. **Zip
+  file** beside Format does the same for a file the form gives.
 - **Version and build**, under the panel, on the right of the license note:
   `Version[Build]: v<app version>[yyyyMMdd-HHmm]`, the time Maven built the
   jar, in UTC. Up to 900px wide it goes below the note. A browser may show a
@@ -357,9 +367,9 @@ instance. These were added; each can be dropped.
 | `GenerationTest` | The same key gives equal rows from separate generators; people don't depend on today's date; parameters that don't apply can't split the cache |
 | `RowsRequestTest` | Defaults, the count limit, bad seeds, regions, sort keys, formats, pages and sizes are refused with the parameter named; settings that make no sense stop the app; the default rows per page comes from the settings, and must be a size the page offers |
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
-| `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served |
-| `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page |
+| `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served; a zip is its own body, made once |
+| `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address; a zip holds the same file and nothing else, has its own ETag, and is the same bytes in any time zone |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered in a zip |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it

@@ -47,11 +47,22 @@ public final class Links {
 
     /** Every row in another format, sorted as now. */
     public String format(Format format) {
+        return build(request.kind().path(), formatParams(format));
+    }
+
+    /** The same as {@link #format}, in a zip archive. */
+    public String zip(Format format) {
+        Map<String, String> params = formatParams(format);
+        params.put("zip", "true");
+        return build(request.kind().path(), params);
+    }
+
+    private Map<String, String> formatParams(Format format) {
         Map<String, String> params = rowParams();
         params.put("sort", request.sort().key());
         params.put("dir", request.descending() ? "desc" : "asc");
         params.put("format", format.param());
-        return build(request.kind().path(), params);
+        return params;
     }
 
     /** The same as {@link #format}, as an absolute URL under {@code base}. */

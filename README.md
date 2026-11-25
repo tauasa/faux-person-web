@@ -48,7 +48,9 @@ after the seed above the table copies it.
 **The same rows as a file.** Under the table, **The same rows, every one**
 links to the rows on screen in every format, all rows, sorted as the table
 is. It also shows the cURL command that fetches them as CSV, with a **Copy**
-button; change `format=csv` at its end for another format.
+button; change `format=csv` at its end for another format, or add `&zip=true`
+for a zip file. The second row of buttons gives each format in a zip file, and
+so does **Zip file** beside Format, except for HTML.
 
 ## With cURL
 
@@ -68,6 +70,9 @@ curl 'https://apps.tauasa.org/faux-person-web/names?count=10&region=JPN&format=j
 # 500 companies with real names, tab-delimited, sorted by state Z to A, into a file
 curl -o companies.tsv \
   'https://apps.tauasa.org/faux-person-web/companies?count=500&real=true&format=tsv&sort=state&dir=desc'
+
+# People in a zip file, with people-42.csv inside
+curl -fo people-42.csv.zip 'https://apps.tauasa.org/faux-person-web/people?count=5000&seed=42&format=csv&zip=true'
 
 # Pipe-delimited people, sorted by date of birth
 curl 'https://apps.tauasa.org/faux-person-web/people?count=50&seed=7&format=psv&sort=dateOfBirth'
@@ -96,6 +101,7 @@ curl 'https://apps.tauasa.org/faux-person-web/people?count=20&format=csv&seed=-3
 | `region` | `MIXED`, or one of `WESTERN`, `ASIA`, `RUS`, `ROK`, `MEX`, `IRN`, `HEB`, `PSE`, `JPN`, `PHL`, `VNM`, `THA`, `NAF`, `CAF`, `SAF`, `BRA`, `GBR`, `FRA`, `ESP`, `PRT`, `GRC`, `NOR`, `SWE`, `FIN` (any case) | `MIXED` | names, people |
 | `real` | `true`, `false` | `false` | companies, people |
 | `format` | `html`, `csv`, `psv`, `tsv`, `json` | `html` | all |
+| `zip` | `true`, `false` | `false` | every format but `html` |
 | `sort` | a column key (below) | `lastName` (names, people), `name` (companies) | all |
 | `dir` | `asc`, `desc` | `asc` | all |
 | `page` | 1 or more | 1 | `html` only |
@@ -131,7 +137,9 @@ than today: people are 18 to 90 years old on that date. Work out an age from
 
 Every format but `html` holds all the rows, sorted by `sort` and `dir`. Files
 are UTF-8 with no byte-order mark. Each response names a file,
-`<path>-<seed>.<format>`, which a browser uses when it saves one.
+`<path>-<seed>.<format>`, which a browser uses when it saves one. With
+`zip=true` the response is `application/zip`, named
+`<path>-<seed>.<format>.zip`, and holds that one file.
 
 **Errors.** A value the app can't use gets `400 Bad Request` and one line
 saying which parameter and what it takes:
