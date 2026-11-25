@@ -19,13 +19,14 @@ import org.tauasa.faux.model.Region;
  * @param region     one region, or {@code null} for mixed
  * @param real       real employer names and domains
  * @param format     the output format
+ * @param zip        the file inside a zip archive. Every format but HTML
  * @param sort       the column to sort by
  * @param descending sort Z to A
  * @param page       the page to show, from 1. HTML only
  * @param size       rows per page. HTML only
  */
 public record RowsRequest(Kind kind, int count, Long seed, Region region, boolean real, Format format,
-        Column sort, boolean descending, int page, int size) {
+        boolean zip, Column sort, boolean descending, int page, int size) {
 
     /** The page sizes the page offers, in order. */
     public static final List<Integer> PAGE_SIZES = List.of(25, 50, 100, 250);
@@ -40,8 +41,9 @@ public record RowsRequest(Kind kind, int count, Long seed, Region region, boolea
         int count = count(params.get("count"), properties);
         Long seed = seed(params.get("seed"));
         Region region = kind.usesRegion() ? region(params.get("region")) : null;
-        boolean real = kind.usesReal() && real(params.get("real"));
+        boolean real = kind.usesReal() && bool("real", params.get("real"));
         Format format = format(params.get("format"));
+        boolean zip = format != Format.HTML && bool("zip", params.get("zip"));
         Column sort = sort(kind, params.get("sort"));
         boolean descending = descending(params.get("dir"));
         int page = 1;
@@ -50,7 +52,7 @@ public record RowsRequest(Kind kind, int count, Long seed, Region region, boolea
             page = page(params.get("page"));
             size = size(params.get("size"), properties);
         }
-        return new RowsRequest(kind, count, seed, region, real, format, sort, descending, page, size);
+        return new RowsRequest(kind, count, seed, region, real, format, zip, sort, descending, page, size);
     }
 
     /** The rows key, with the seed given or chosen. */
@@ -102,14 +104,14 @@ public record RowsRequest(Kind kind, int count, Long seed, Region region, boolea
         }
     }
 
-    private static boolean real(String value) {
+    private static boolean bool(String name, String value) {
         if (blank(value) || value.strip().equalsIgnoreCase("false")) {
             return false;
         }
         if (value.strip().equalsIgnoreCase("true")) {
             return true;
         }
-        throw new BadParameterException("real", "real must be true or false");
+        throw new BadParameterException(name, name + " must be true or false");
     }
 
     private static Format format(String value) {

@@ -30,6 +30,7 @@ public class RowsController {
 
     /** The header that names the seed behind a response's rows. */
     public static final String SEED_HEADER = "X-Faux-Seed";
+    private static final String ZIP_TYPE = "application/zip";
 
     private static final CacheControl FOREVER = CacheControl.maxAge(java.time.Duration.ofDays(1))
             .cachePublic().immutable();
@@ -86,10 +87,12 @@ public class RowsController {
         }
 
         if (request.format() != Format.HTML) {
-            byte[] body = store.body(new RowsKey.Body(key, request.format()));
-            headers.setContentType(MediaType.parseMediaType(request.format().contentType()));
-            headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + kind.path() + "-" + seed + "."
-                    + request.format().extension() + "\"");
+            RowsKey.Body file = new RowsKey.Body(key, request.format(), request.zip());
+            byte[] body = store.body(file);
+            headers.setContentType(MediaType.parseMediaType(
+                    request.zip() ? ZIP_TYPE : request.format().contentType()));
+            headers.set(HttpHeaders.CONTENT_DISPOSITION, (request.zip() ? "attachment" : "inline")
+                    + "; filename=\"" + file.downloadName() + "\"");
             return ResponseEntity.ok().headers(headers).body(body);
         }
 
@@ -105,7 +108,10 @@ public class RowsController {
         String common = String.join("|", rows.kind().path(), String.valueOf(rows.count()),
                 String.valueOf(rows.seed()), String.valueOf(rows.region()), String.valueOf(rows.real()),
                 key.sort(), String.valueOf(key.descending()), request.format().param());
-        return request.format() == Format.HTML ? common + "|" + request.page() + "|" + request.size() : common;
+        if (request.format() == Format.HTML) {
+            return common + "|" + request.page() + "|" + request.size();
+        }
+        return request.zip() ? common + "|zip" : common;
     }
 
     private PageView page(RowsRequest request, long seed, List<?> sorted) {
@@ -157,14 +163,16 @@ public class RowsController {
                 request.real(), PageView.formats(Format.HTML), sortKey, request.descending() ? "desc" : "asc", size);
 
         List<PageView.Download> downloads = new ArrayList<>();
+        List<PageView.Download> zips = new ArrayList<>();
         for (Format format : Format.values()) {
             if (format != Format.HTML) {
                 downloads.add(new PageView.Download(format.label(), links.format(format)));
+                zips.add(new PageView.Download(format.label(), links.zip(format)));
             }
         }
         String base = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         String curl = "curl '" + links.absolute(base, Format.CSV) + "'";
 
-        return new PageView(kind, PageView.tabs(kind), form, table, downloads, curl, null);
+        return new PageView(kind, PageView.tabs(kind), form, table, downloads, zips, curl, null);
     }
 }

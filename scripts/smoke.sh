@@ -25,6 +25,10 @@ first=$(cat "$body")
 check "/people?count=25&seed=42&format=csv" 200
 [ "$(cat "$body")" = "$first" ] || { echo "FAIL the same seed gave different rows"; fail=1; }
 
+check "/people?count=25&seed=42&format=csv&zip=true" 200
+grep -qi '^content-type: *application/zip' "$headers" || { echo "FAIL the zip was not application/zip"; fail=1; }
+[ "$(unzip -p "$body")" = "$first" ] || { echo "FAIL the zip did not hold the same CSV"; fail=1; }
+
 check "/names?count=3&seed=1&format=json" 200
 check "/companies?count=10&seed=1" 200
 grep -q 'id="shown-seed">1<' "$body" || { echo "FAIL the page did not show its seed"; fail=1; }

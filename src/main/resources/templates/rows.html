@@ -69,6 +69,9 @@
                 th:selected="${o.selected()}">HTML</option>
       </select>
     </label>
+    <label class="check">
+      <input type="checkbox" name="zip" value="true"> Zip file (not HTML)
+    </label>
     <input type="hidden" name="sort" th:value="${view.form().sort()}">
     <input type="hidden" name="dir" th:value="${view.form().dir()}">
     <input type="hidden" name="size" th:value="${view.form().size()}">
@@ -126,6 +129,10 @@
       <h2>The same rows, every one</h2>
       <p>
         <a th:each="d : ${view.downloads()}" th:href="${d.href()}" th:text="${d.label()}" class="pill">CSV</a>
+      </p>
+      <p>In a zip file:</p>
+      <p>
+        <a th:each="d : ${view.zips()}" th:href="${d.href()}" th:text="${d.label()}" th:attr="aria-label=${d.label()} + ', zipped'" class="pill">CSV</a>
       </p>
       <p>With cURL:</p>
       <div class="curl">
