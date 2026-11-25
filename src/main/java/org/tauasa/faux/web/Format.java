@@ -42,6 +42,11 @@ public enum Format {
         return extension;
     }
 
+    /** The extension of the file in a zip archive: {@code txt} for the pipe and tab-delimited text formats. */
+    public String zippedExtension() {
+        return this == PSV || this == TSV ? "txt" : extension;
+    }
+
     /** The format a parameter value names, any case. */
     public static Optional<Format> forParam(String value) {
         String wanted = value.strip().toLowerCase(Locale.ROOT);

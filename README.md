@@ -45,12 +45,13 @@ pick a seed you used before: up to 20 each for Names, Companies and People.
 That list stays in this browser and is never sent to the server. The icon
 after the seed above the table copies it.
 
-**The same rows as a file.** Under the table, **The same rows, every one**
-links to the rows on screen in every format, all rows, sorted as the table
-is. It also shows the cURL command that fetches them as CSV, with a **Copy**
-button; change `format=csv` at its end for another format, or add `&zip=true`
-for a zip file. The second row of buttons gives each format in a zip file, and
-so does **Zip file** beside Format, except for HTML.
+**The same rows as a file.** Under the table, **The same rows, every one (zipped)**
+downloads the rows on screen in each format, in a zip file: all rows, sorted as
+the table is, named for example `people-42.csv.zip` after the seed. For a file
+that isn't zipped, pick a **Format** and press **Generate**; tick **Zip file**
+there to zip it. It's off for HTML. Under the buttons is the cURL command that
+fetches the rows as CSV, with a **Copy** button; change `format=csv` at its end
+for another format, or add `&zip=true` for a zip file.
 
 ## With cURL
 
@@ -139,7 +140,8 @@ Every format but `html` holds all the rows, sorted by `sort` and `dir`. Files
 are UTF-8 with no byte-order mark. Each response names a file,
 `<path>-<seed>.<format>`, which a browser uses when it saves one. With
 `zip=true` the response is `application/zip`, named
-`<path>-<seed>.<format>.zip`, and holds that one file.
+`<path>-<seed>.<ext>.zip`, and holds that one file as `<path>-<seed>.<ext>`.
+There `<ext>` is `csv` or `json`, and `txt` for both `psv` and `tsv`.
 
 **Errors.** A value the app can't use gets `400 Bad Request` and one line
 saying which parameter and what it takes:

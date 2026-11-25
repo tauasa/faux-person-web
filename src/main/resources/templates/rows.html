@@ -64,13 +64,13 @@
       <input type="checkbox" name="real" value="true" th:checked="${view.form().real()}"> Real companies
     </label>
     <label>Format
-      <select name="format">
+      <select name="format" id="format">
         <option th:each="o : ${view.form().formats()}" th:value="${o.value()}" th:text="${o.label()}"
                 th:selected="${o.selected()}">HTML</option>
       </select>
     </label>
     <label class="check">
-      <input type="checkbox" name="zip" value="true"> Zip file (not HTML)
+      <input type="checkbox" name="zip" id="zip" value="true"> Zip file
     </label>
     <input type="hidden" name="sort" th:value="${view.form().sort()}">
     <input type="hidden" name="dir" th:value="${view.form().dir()}">
@@ -126,13 +126,9 @@
     </div>
 
     <section class="exports">
-      <h2>The same rows, every one</h2>
+      <h2>The same rows, every one (zipped)</h2>
       <p>
-        <a th:each="d : ${view.downloads()}" th:href="${d.href()}" th:text="${d.label()}" class="pill">CSV</a>
-      </p>
-      <p>In a zip file:</p>
-      <p>
-        <a th:each="d : ${view.zips()}" th:href="${d.href()}" th:text="${d.label()}" th:attr="aria-label=${d.label()} + ', zipped'" class="pill">CSV</a>
+        <a th:each="d : ${view.downloads()}" th:href="${d.href()}" th:text="${d.label()}" th:attr="aria-label=${d.label()} + ', zipped'" class="pill">CSV</a>
       </p>
       <p>With cURL:</p>
       <div class="curl">

@@ -96,7 +96,7 @@ to build a cache miss, the answer is `503` with `Retry-After: 2`.
 
 | `format` | Content type | Body |
 |---|---|---|
-| `html` | `text/html` | The page: controls, a sortable paged table, links to the other formats, and the cURL command for the CSV |
+| `html` | `text/html` | The page: controls, a sortable paged table, links to zips of the other formats, and the cURL command for the CSV |
 | `csv` | `text/csv; charset=utf-8` | RFC 4180: header row of column titles, CRLF line ends, a field quoted when it holds a comma, quote, CR or LF, with quotes doubled |
 | `psv` | `text/plain; charset=utf-8` | The same with `\|` for the comma and LF line ends |
 | `tsv` | `text/tab-separated-values; charset=utf-8` | The same with a tab and LF line ends |
@@ -110,7 +110,8 @@ byte-order mark.
 
 **Zipped.** With `zip=true` the response is `application/zip`, as an
 `attachment` named `<kind>-<seed>.<ext>.zip`, and holds one file, the same
-bytes as without it. The archive is made in memory. The file in it is always
+bytes as without it. `<ext>` is `txt` for `psv` and `tsv`, so those two share a
+name. The archive is made in memory. The file in it is always
 dated 2026-01-01 00:00, so the same request gives the same archive on the same
 Java runtime. A Java or zlib update can compress it differently under the same
 ETag; the file inside stays the same.
@@ -209,9 +210,10 @@ can't do.
   newest first: up to 20 each for Names, Companies and People. The script
   keeps them in the browser's `localStorage`. The server never sees the list.
 - **Other formats.** Filled buttons that change color on hover, linking to the
-  same rows as CSV, pipe, tab-delimited and JSON, a second row of them for each
-  in a zip file, and the cURL command for the CSV, with a Copy button. **Zip
-  file** beside Format does the same for a file the form gives.
+  same rows as CSV, pipe, tab-delimited and JSON, each in a zip file, and the
+  cURL command for the CSV, with a Copy button. **Zip
+  file** beside Format does the same for a file the form gives. The script
+  disables it while Format is HTML; without the script it does nothing there.
 - **Version and build**, under the panel, on the right of the license note:
   `Version[Build]: v<app version>[yyyyMMdd-HHmm]`, the time Maven built the
   jar, in UTC. Up to 900px wide it goes below the note. A browser may show a
@@ -369,7 +371,7 @@ instance. These were added; each can be dropped.
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served; a zip is its own body, made once |
 | `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address; a zip holds the same file and nothing else, has its own ETag, and is the same bytes in any time zone |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered in a zip |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered once, in a zip |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it

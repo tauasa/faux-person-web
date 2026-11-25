@@ -37,17 +37,17 @@ class RowsControllerTest extends HttpTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"csv", "psv", "tsv", "json"})
-    void aZipHoldsTheSameFileAndNothingElse(String format) throws IOException {
+    @CsvSource({"csv, csv", "psv, txt", "tsv, txt", "json, json"})
+    void aZipHoldsTheSameFileAndNothingElse(String format, String extension) throws IOException {
         String path = "/people?count=60&seed=42&format=" + format;
         HttpResponse<byte[]> zipped = getBytes(path + "&zip=true");
         assertEquals(200, zipped.statusCode());
         assertEquals("application/zip", header(zipped, "Content-Type"));
-        assertEquals("attachment; filename=\"people-42." + format + ".zip\"", header(zipped, "Content-Disposition"));
+        assertEquals("attachment; filename=\"people-42." + extension + ".zip\"", header(zipped, "Content-Disposition"));
         assertEquals("42", header(zipped, RowsController.SEED_HEADER));
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipped.body()))) {
             ZipEntry entry = zip.getNextEntry();
-            assertEquals("people-42." + format, entry.getName());
+            assertEquals("people-42." + extension, entry.getName());
             assertArrayEquals(getBytes(path).body(), zip.readAllBytes());
             assertNull(zip.getNextEntry(), "one file");
         }
