@@ -1,6 +1,6 @@
 // faux-person-web's page script. The page works without it; it adds what a
-// plain form can't do: the Random button, the seed history, the Copy buttons and a Zip
-// checkbox that's off for HTML, where it does nothing.
+// plain form can't do: the Random button, the seed history, the Copy buttons, a Zip
+// checkbox that's off for HTML, where it does nothing, and a row's card on hover.
 // The seed history stays in this browser (localStorage). The server never sees it.
 (function () {
   "use strict";
@@ -95,6 +95,167 @@
       navigator.clipboard.writeText(curl.textContent).then(function () {
         copy.textContent = "Copied";
         window.setTimeout(function () { copy.textContent = "Copy"; }, 1500);
+      });
+    });
+  }
+
+  // Resting the mouse on a row for a second shows it in a card, one field per line,
+  // with a Copy button. Touch has no hover, so it's mouse only.
+  var HOVER_MS = 1000;
+  var LEAVE_MS = 300;
+  var tbody = document.querySelector(".table-wrap tbody");
+  if (tbody) {
+    var titles = Array.prototype.map.call(document.querySelectorAll(".table-wrap thead th"), function (th) {
+      var title = th.querySelector("a span");
+      return (title || th).textContent.trim();
+    });
+    var card = document.createElement("div");
+    card.className = "row-card";
+    card.hidden = true;
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", "Row details");
+    var fields = document.createElement("dl");
+    var copyRow = document.createElement("button");
+    copyRow.type = "button";
+    copyRow.className = "primary";
+    copyRow.textContent = "Copy";
+    copyRow.hidden = !navigator.clipboard;
+    var rowCopied = document.createElement("span");
+    rowCopied.className = "sr-only";
+    rowCopied.setAttribute("role", "status");
+    card.appendChild(fields);
+    card.appendChild(copyRow);
+    card.appendChild(rowCopied);
+    document.body.appendChild(card);
+
+    var showTimer, hideTimer, copyTimer, pending, shownRow, pointerX = 0, text = "";
+
+    var lines = function (row) {
+      return Array.prototype.map.call(row.cells, function (cell, i) {
+        return { title: titles[i] || "Column " + (i + 1), value: cell.textContent };
+      });
+    };
+
+    var hide = function () {
+      window.clearTimeout(hideTimer);
+      card.hidden = true;
+      if (shownRow) {
+        shownRow.classList.remove("row-shown");
+        shownRow = null;
+      }
+    };
+
+    var show = function (row) {
+      hide();
+      fields.textContent = "";
+      text = lines(row).map(function (line) {
+        var dt = document.createElement("dt");
+        var dd = document.createElement("dd");
+        dt.textContent = line.title;
+        dd.textContent = line.value;
+        fields.appendChild(dt);
+        fields.appendChild(dd);
+        return line.title + ": " + line.value;
+      }).join("\n");
+      window.clearTimeout(copyTimer);
+      copyRow.textContent = "Copy";
+      rowCopied.textContent = "";
+      shownRow = row;
+      row.classList.add("row-shown");
+      card.hidden = false;
+      // Under the row, starting near the pointer; above it if there's no room below.
+      // With room on neither side, it stays inside the window and covers part of the row.
+      var box = row.getBoundingClientRect();
+      var width = card.offsetWidth;
+      var height = card.offsetHeight;
+      var viewWidth = document.documentElement.clientWidth;
+      var left = Math.max(8, Math.min(pointerX - 24, viewWidth - width - 8));
+      // The site header sticks to the top on wide screens; the card mustn't go under it.
+      var header = document.querySelector(".site-header");
+      var ceiling = header && window.getComputedStyle(header).position === "sticky"
+        ? header.getBoundingClientRect().bottom : 0;
+      var top = box.bottom;
+      if (top + height > window.innerHeight) {
+        top = box.top - height >= ceiling ? box.top - height
+          : Math.max(ceiling + 8, window.innerHeight - height - 8);
+      }
+      card.style.left = (left + window.scrollX) + "px";
+      card.style.top = (top + window.scrollY) + "px";
+    };
+
+    var later = function () {
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(hide, LEAVE_MS);
+    };
+
+    tbody.addEventListener("pointerover", function (e) {
+      if (e.pointerType !== "mouse") {
+        return;
+      }
+      var row = e.target.closest("tr");
+      pointerX = e.clientX;
+      if (row === shownRow) {
+        window.clearTimeout(hideTimer);
+        return;
+      }
+      if (row === pending) {
+        return;
+      }
+      window.clearTimeout(showTimer);
+      pending = row;
+      if (shownRow) {
+        later();
+      }
+      showTimer = window.setTimeout(function () {
+        pending = null;
+        if (row.isConnected) {
+          show(row);
+        }
+      }, HOVER_MS);
+    });
+    tbody.addEventListener("pointermove", function (e) {
+      pointerX = e.clientX;
+    });
+    tbody.addEventListener("pointerleave", function () {
+      window.clearTimeout(showTimer);
+      pending = null;
+      if (shownRow) {
+        later();
+      }
+    });
+    // Moving from the row onto the card keeps it open; leaving the card closes it.
+    card.addEventListener("pointerenter", function () {
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(showTimer);
+      pending = null;
+    });
+    card.addEventListener("pointerleave", later);
+    // Dragging to select text in the table doesn't open a card.
+    tbody.addEventListener("pointerdown", function () {
+      window.clearTimeout(showTimer);
+      pending = null;
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        hide();
+      }
+    });
+    document.addEventListener("pointerdown", function (e) {
+      if (!card.contains(e.target)) {
+        hide();
+      }
+    });
+    window.addEventListener("resize", hide);
+
+    copyRow.addEventListener("click", function () {
+      navigator.clipboard.writeText(text).then(function () {
+        copyRow.textContent = "Copied";
+        rowCopied.textContent = "Row copied";
+        window.clearTimeout(copyTimer);
+        copyTimer = window.setTimeout(function () {
+          copyRow.textContent = "Copy";
+          rowCopied.textContent = "";
+        }, 1500);
       });
     });
   }
