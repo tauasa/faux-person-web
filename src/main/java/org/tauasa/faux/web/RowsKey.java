@@ -40,7 +40,8 @@ public record RowsKey(Kind kind, int count, long seed, Region region, boolean re
 
         /** The file's name, {@code people-42.csv}: the one inside the archive when there is one. */
         public String fileName() {
-            return sorted.rows().kind().path() + "-" + sorted.rows().seed() + "." + format.extension();
+            return sorted.rows().kind().path() + "-" + sorted.rows().seed() + "."
+                    + (zip ? format.zippedExtension() : format.extension());
         }
 
         /** The name to save the body under: {@link #fileName}, with {@code .zip} after it for an archive. */

@@ -1,5 +1,6 @@
 // faux-person-web's page script. The page works without it; it adds what a
-// plain form can't do: the Random button, the seed history and the Copy buttons.
+// plain form can't do: the Random button, the seed history, the Copy buttons and a Zip
+// checkbox that's off for HTML, where it does nothing.
 // The seed history stays in this browser (localStorage). The server never sees it.
 (function () {
   "use strict";
@@ -49,6 +50,21 @@
       seedBox.value = "";
       seedBox.focus();
     });
+  }
+
+  var format = document.getElementById("format");
+  var zip = document.getElementById("zip");
+  if (format && zip) {
+    var syncZip = function () {
+      zip.disabled = format.value === "html";
+      if (zip.disabled) {
+        zip.checked = false;
+      }
+    };
+    format.addEventListener("change", syncZip);
+    // Going back to the page can restore another format after this script ran.
+    window.addEventListener("pageshow", syncZip);
+    syncZip();
   }
 
   var copySeed = document.getElementById("copy-seed");

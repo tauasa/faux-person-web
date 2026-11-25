@@ -14,13 +14,11 @@ import org.tauasa.faux.model.Region;
  * @param tabs      one per kind
  * @param form      the controls' values
  * @param table     the rows on this page, or {@code null} when there's an error instead
- * @param downloads the same rows in each export format
- * @param zips      the same, each in a zip archive
+ * @param downloads the same rows in each export format, in a zip archive
  * @param curl      the cURL command for the same rows as CSV, or {@code null}
  * @param error     what was wrong with the request, or {@code null}
  */
-public record PageView(Kind kind, List<Tab> tabs, Form form, Table table, List<Download> downloads,
-        List<Download> zips, String curl,
+public record PageView(Kind kind, List<Tab> tabs, Form form, Table table, List<Download> downloads, String curl,
         String error) {
 
     public record Tab(String title, String href, boolean active) {
@@ -81,6 +79,6 @@ public record PageView(Kind kind, List<Tab> tabs, Form form, Table table, List<D
         Form form = new Form(kind.path(), properties.defaultCount(), properties.maxCount(), "", kind.usesRegion(),
                 regions(null), kind.usesReal(), false, formats(Format.HTML), kind.defaultSort().key(), "asc",
                 properties.defaultSize());
-        return new PageView(kind, tabs(kind), form, null, List.of(), List.of(), null, message);
+        return new PageView(kind, tabs(kind), form, null, List.of(), null, message);
     }
 }

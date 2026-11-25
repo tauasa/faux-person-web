@@ -163,16 +163,14 @@ public class RowsController {
                 request.real(), PageView.formats(Format.HTML), sortKey, request.descending() ? "desc" : "asc", size);
 
         List<PageView.Download> downloads = new ArrayList<>();
-        List<PageView.Download> zips = new ArrayList<>();
         for (Format format : Format.values()) {
             if (format != Format.HTML) {
-                downloads.add(new PageView.Download(format.label(), links.format(format)));
-                zips.add(new PageView.Download(format.label(), links.zip(format)));
+                downloads.add(new PageView.Download(format.label(), links.zip(format)));
             }
         }
         String base = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         String curl = "curl '" + links.absolute(base, Format.CSV) + "'";
 
-        return new PageView(kind, PageView.tabs(kind), form, table, downloads, zips, curl, null);
+        return new PageView(kind, PageView.tabs(kind), form, table, downloads, curl, null);
     }
 }

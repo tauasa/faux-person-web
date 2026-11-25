@@ -160,13 +160,16 @@ class PageTest extends HttpTest {
     }
 
     @Test
-    void thePageOffersEveryFormatInAZip() {
+    void thePageOffersEveryFormatOnceInAZip() {
         String html = get("/people?count=5&seed=1").body();
-        assertTrue(html.contains("type=\"checkbox\" name=\"zip\" value=\"true\""), "an option on the form");
+        assertTrue(html.contains("type=\"checkbox\" name=\"zip\" id=\"zip\" value=\"true\""), "an option on the form");
         for (String format : List.of("csv", "psv", "tsv", "json")) {
             assertTrue(html.contains("format=" + format + "&amp;zip=true\""), format);
-            assertTrue(html.contains("format=" + format + "\""), format + " unzipped");
+            assertFalse(html.contains("format=" + format + "\""), format + " has no unzipped button");
         }
+        assertEquals(4, html.split("class=\"pill\"", -1).length - 1, "one row of buttons");
+        assertTrue(html.contains("aria-label=\"CSV, zipped\""), "said to screen readers");
+        assertTrue(html.contains("<select name=\"format\" id=\"format\">"), "the script turns Zip off for HTML by it");
     }
 
     private static String between(String html, String start, String end) {

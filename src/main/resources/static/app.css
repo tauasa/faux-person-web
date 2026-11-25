@@ -147,6 +147,7 @@ a { color: var(--accent); }
 }
 .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
 .controls label.check { flex-direction: row; align-items: center; gap: 6px; color: var(--fg); padding-bottom: 8px; }
+.controls label.check:has(:disabled) { color: var(--muted); opacity: 0.6; }
 .controls input[type=number] { width: 8em; }
 .controls input[name=seed] { width: 14em; font-family: var(--mono); }
 
