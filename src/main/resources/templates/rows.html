@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title th:text="${view.kind().title()} + ' · faux-person-web'">People · faux-person-web</title>
+  <title th:text="${view.kind().title()} + ' · Faux Person Generator'">People · Faux Person Generator</title>
   <link rel="stylesheet" th:href="@{/app.css(v=${@assets.version('app.css')})}">
   <script th:src="@{/app.js(v=${@assets.version('app.js')})}" defer></script>
 </head>
@@ -31,8 +31,9 @@
 <main class="page">
 <div class="top">
   <h1>Faux Person Generator</h1>
-  <p class="tagline">Random names, companies and people using <a href="https://github.com/tauasa/faux-person">faux-person</a>. Same seed, same rows.
-  You can view/clone the code for this webapp here: <a href="https://github.com/tauasa/faux-person-web">faux-person-web</a>.
+  <p class="tagline">Random names, companies and people generated with the
+    <a href="https://github.com/tauasa/faux-person">faux-person</a> library. Same seed, same rows.
+    Source code: <a href="https://github.com/tauasa/faux-person-web">faux-person-web</a>.
   </p>
 </div>
 
