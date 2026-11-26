@@ -37,7 +37,13 @@ jobs:
           java -jar target/faux-person-web.jar --server.port=18080 > app.log 2>&1 &
           for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:18080/faux-person-web/health >/dev/null 2>&1 && break; sleep 1; done
           scripts/smoke.sh http://127.0.0.1:18080/faux-person-web || { cat app.log; exit 1; }
+      # cfn-lint and each of its dependencies install only if their hashes match
+      # .github/requirements/cfn-lint.txt, which says how to regenerate it. Wheels
+      # only, because pip doesn't hash-check the tools it would use to build one.
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
       - name: Check the template
         run: |
-          pip install --quiet cfn-lint==1.60.1
+          python -m pip install --quiet --require-hashes --only-binary :all: -r .github/requirements/cfn-lint.txt
           cfn-lint infra/host.yaml
