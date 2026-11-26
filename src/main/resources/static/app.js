@@ -138,11 +138,24 @@
 
     var hide = function () {
       window.clearTimeout(hideTimer);
+      if (card.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
       card.hidden = true;
       if (shownRow) {
         shownRow.classList.remove("row-shown");
         shownRow = null;
       }
+    };
+
+    // Escape, a click or a resize closes the card and keeps it closed until the
+    // mouse moves to another row.
+    var dismissed = null;
+    var dismiss = function () {
+      dismissed = shownRow || pending;
+      window.clearTimeout(showTimer);
+      pending = null;
+      hide();
     };
 
     var show = function (row) {
@@ -162,13 +175,14 @@
       rowCopied.textContent = "";
       shownRow = row;
       row.classList.add("row-shown");
+      var viewWidth = document.documentElement.clientWidth;
+      card.style.maxWidth = (viewWidth - 16) + "px";
       card.hidden = false;
       // Under the row, starting near the pointer; above it if there's no room below.
       // With room on neither side, it stays inside the window and covers part of the row.
       var box = row.getBoundingClientRect();
       var width = card.offsetWidth;
       var height = card.offsetHeight;
-      var viewWidth = document.documentElement.clientWidth;
       var left = Math.max(8, Math.min(pointerX - 24, viewWidth - width - 8));
       // The site header sticks to the top on wide screens; the card mustn't go under it.
       var header = document.querySelector(".site-header");
@@ -194,13 +208,22 @@
       }
       var row = e.target.closest("tr");
       pointerX = e.clientX;
+      // Dragging to select text doesn't open a card.
+      if (e.buttons !== 0) {
+        window.clearTimeout(showTimer);
+        pending = null;
+        return;
+      }
       if (row === shownRow) {
         window.clearTimeout(hideTimer);
+        window.clearTimeout(showTimer);
+        pending = null;
         return;
       }
-      if (row === pending) {
+      if (row === pending || row === dismissed) {
         return;
       }
+      dismissed = null;
       window.clearTimeout(showTimer);
       pending = row;
       if (shownRow) {
@@ -219,6 +242,7 @@
     tbody.addEventListener("pointerleave", function () {
       window.clearTimeout(showTimer);
       pending = null;
+      dismissed = null;
       if (shownRow) {
         later();
       }
@@ -230,32 +254,32 @@
       pending = null;
     });
     card.addEventListener("pointerleave", later);
-    // Dragging to select text in the table doesn't open a card.
-    tbody.addEventListener("pointerdown", function () {
-      window.clearTimeout(showTimer);
-      pending = null;
-    });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
-        hide();
+        dismiss();
       }
     });
     document.addEventListener("pointerdown", function (e) {
       if (!card.contains(e.target)) {
-        hide();
+        dismiss();
       }
     });
-    window.addEventListener("resize", hide);
+    window.addEventListener("resize", dismiss);
 
+    var copyDone = function (label, status) {
+      copyRow.textContent = label;
+      rowCopied.textContent = status;
+      window.clearTimeout(copyTimer);
+      copyTimer = window.setTimeout(function () {
+        copyRow.textContent = "Copy";
+        rowCopied.textContent = "";
+      }, 1500);
+    };
     copyRow.addEventListener("click", function () {
       navigator.clipboard.writeText(text).then(function () {
-        copyRow.textContent = "Copied";
-        rowCopied.textContent = "Row copied";
-        window.clearTimeout(copyTimer);
-        copyTimer = window.setTimeout(function () {
-          copyRow.textContent = "Copy";
-          rowCopied.textContent = "";
-        }, 1500);
+        copyDone("Copied", "Row copied");
+      }, function () {
+        copyDone("Copy failed", "Copy failed");
       });
     });
   }

@@ -209,13 +209,16 @@ can't do.
 - **Seed history.** The seed box offers the seeds this browser used before,
   newest first: up to 20 each for Names, Companies and People. The script
   keeps them in the browser's `localStorage`. The server never sees the list.
-- **A row's card.** Resting the mouse on a row for a second outlines the row
-  and shows a card above or below it: each column's title and value, two to a
-  line from 760px wide and one below that, and a **Copy** button that copies
-  them as `Title: value` lines, one per field. The card stays
-  open while the mouse is on the row or the card, and closes when it leaves
-  them, on Escape, or on a click elsewhere. It's mouse only, since touch has no
-  hover, and the Copy button shows only where the browser offers clipboard
+- **A row's card.** A second after the mouse moves onto a row, the row is
+  outlined and a card shows below it, or above it if there's no room below, or
+  over part of it if there's room on neither side. The card has each column's
+  title and value, two to a line from 760px wide and one below that, and a
+  **Copy** button that copies them as `Title: value` lines, one per field. It
+  stays open while the mouse is on the row or the card, and closes when the
+  mouse leaves them. Escape, a click elsewhere or resizing the window closes it
+  until the mouse moves to another row. Dragging to select text doesn't open
+  one. It's for mouse users only: touch has no hover, and the keyboard can't
+  open it. The Copy button shows only where the browser offers clipboard
   access.
 - **Other formats.** Filled buttons that change color on hover, linking to the
   same rows as CSV, pipe, tab-delimited and JSON, each in a zip file, and the
@@ -229,7 +232,7 @@ can't do.
 - **Light and dark** follow the browser's `prefers-color-scheme`.
 
 faux-person-fx shows a record dialog on double-click. Here a row's card does
-that job, on hover.
+that job for mouse users, on hover.
 
 ## Security
 
