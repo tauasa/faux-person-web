@@ -1,0 +1,8 @@
+# The template checker build.yml runs. Regenerate cfn-lint.txt with:
+#   pip-compile --generate-hashes --allow-unsafe --strip-extras --no-emit-index-url .github/requirements/cfn-lint.in
+# under Python 3.12, the version build.yml sets up. Pin each package to a release at
+# least two weeks old, so a bad upload has had time to be noticed and pulled.
+cfn-lint==1.60.1
+jsonpatch==1.47
+pyyaml==6.0.3
+regex==2026.11.9
