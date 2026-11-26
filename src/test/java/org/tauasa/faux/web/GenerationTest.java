@@ -68,7 +68,7 @@ class GenerationTest {
 
     @Test
     void peopleHaveNoAgeColumnBecauseItWouldChangeWithTheDate() {
-        assertEquals(List.of("firstName", "lastName", "gender", "region", "dateOfBirth", "email", "phone",
+        assertEquals(List.of("firstName", "lastName", "nativeName", "gender", "region", "dateOfBirth", "email", "phone",
                 "street", "city", "state", "postalCode", "country", "employer", "employerCity", "employerState",
                 "employerDomain"), Kind.PEOPLE.columns().stream().map(Column::key).toList());
     }
