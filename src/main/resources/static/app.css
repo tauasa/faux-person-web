@@ -9,6 +9,9 @@
   --accent-hover: #1c4a9e;
   --accent-fg: #ffffff;
   --stripe: #f1f3f6;
+  /* A row's card, which floats over the table. */
+  --card: #ffffff;
+  --card-border: #d9dbdf;
   --error-bg: #fdecea;
   --error-fg: #8a1c12;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -26,6 +29,9 @@
     --accent-hover: #b4cfff;
     --accent-fg: #0f1114;
     --stripe: #2a2e33;
+    /* Lighter than the panel so the card stands off the table; its muted text stays above 4.5:1. */
+    --card: #363a41;
+    --card-border: #50555e;
     --error-bg: #4a1c18;
     --error-fg: #ffd9d4;
   }
@@ -199,8 +205,8 @@ tbody tr.row-shown { outline: 2px solid var(--accent); outline-offset: -2px; }
   width: max-content;
   max-width: calc(100vw - 16px);
   padding: 12px 14px;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--card);
+  border: 1px solid var(--card-border);
   border-radius: 8px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
   font-size: 0.9rem;
