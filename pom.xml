@@ -23,7 +23,7 @@
     <java.version>17</java.version>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <faux-person.version>0.2.0</faux-person.version>
+    <faux-person.version>0.3.0</faux-person.version>
     <!-- The commit a release is built from. deploy.yml sets it (-Dbuild.id=<sha>); it goes into every ETag. -->
     <build.id>local</build.id>
     <!-- When the build ran, in UTC. The page shows it, and it goes into every ETag.

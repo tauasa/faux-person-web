@@ -84,13 +84,24 @@ class RowsControllerTest extends HttpTest {
     void csvHoldsEveryRowSortedAsAsked() {
         String body = get("/names?count=300&seed=1&format=csv&sort=firstName&dir=desc").body();
         String[] lines = body.split("\r\n");
-        assertEquals("First name,Last name", lines[0]);
+        assertEquals("First name,Last name,Native name", lines[0]);
         assertEquals(301, lines.length, "a header and every row, no paging");
         for (int i = 2; i < lines.length; i++) {
             String previous = lines[i - 1].split(",")[0];
             String current = lines[i].split(",")[0];
             assertTrue(Column.VALUE_ORDER.compare(previous, current) >= 0, previous + " before " + current);
         }
+    }
+
+    /** A South Korean's name comes with its Hangul in every export, and other regions' with none. */
+    @Test
+    void southKoreanNamesCarryTheirHangul() {
+        String csv = get("/names?count=20&seed=3&region=rok&format=csv").body();
+        csv.lines().skip(1).forEach(l -> assertTrue(l.matches("[^,]+,[^,]+,[\\uAC00-\\uD7A3]{2,6}"), l));
+        String json = get("/people?count=5&seed=3&region=rok&format=json").body();
+        assertEquals(5, json.split("\"nativeName\":\\s*\"[\\uAC00-\\uD7A3]{2,6}\"").length - 1, json);
+        String rus = get("/names?count=5&seed=3&region=rus&format=csv").body();
+        rus.lines().skip(1).forEach(l -> assertTrue(l.endsWith(","), l));
     }
 
     @Test

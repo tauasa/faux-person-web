@@ -11,6 +11,7 @@ import org.tauasa.faux.NameGenerator;
 import org.tauasa.faux.PersonGenerator;
 import org.tauasa.faux.model.Company;
 import org.tauasa.faux.model.Name;
+import org.tauasa.faux.model.NativeName;
 import org.tauasa.faux.model.Person;
 
 /**
@@ -20,7 +21,8 @@ import org.tauasa.faux.model.Person;
 public enum Kind {
     NAMES("names", "Names", true, false, "lastName", List.of(
             Column.of(Name.class, "First name", Name::firstName),
-            Column.of(Name.class, "Last name", Name::lastName))) {
+            Column.of(Name.class, "Last name", Name::lastName),
+            Column.of(Name.class, "Native name", Kind::nativeName))) {
         @Override
         List<?> generate(RowsKey key) {
             NameGenerator.Builder builder = NameGenerator.builder().region(key.region()).seed(key.seed());
@@ -46,6 +48,7 @@ public enum Kind {
     PEOPLE("people", "People", true, true, "lastName", List.of(
             Column.of(Person.class, "First name", Person::firstName),
             Column.of(Person.class, "Last name", Person::lastName),
+            Column.of(Person.class, "Native name", p -> nativeName(p.name())),
             // Enums show and sort by name, A to Z, not in declaration order.
             Column.of(Person.class, "Gender", p -> p.gender().name()),
             Column.of(Person.class, "Region", p -> p.region().name()),
@@ -74,6 +77,14 @@ public enum Kind {
      * faux-person's default is the system clock: with it, the same seed would
      * give people born a day later for each day that passes.
      */
+    /**
+     * The whole name in its own script, as faux-person 0.3.0 gives it: Hangul
+     * for a South Korean (전영민), and "" for every other region.
+     */
+    static String nativeName(Name n) {
+        return n.nativeName().map(NativeName::fullName).orElse("");
+    }
+
     public static final LocalDate REFERENCE_DATE = LocalDate.of(2026, 1, 1);
     static final Clock REFERENCE_CLOCK = Clock.fixed(REFERENCE_DATE.atStartOfDay(ZoneOffset.UTC).toInstant(),
             ZoneOffset.UTC);

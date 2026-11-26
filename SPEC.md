@@ -31,12 +31,17 @@ Generation is faux-person's. The app adds no fields of its own.
 
 | Kind | Path | Columns, in order | Opens sorted by |
 |---|---|---|---|
-| Names | `/names` | First name, Last name | Last name |
+| Names | `/names` | First name, Last name, Native name | Last name |
 | Companies | `/companies` | Name, City, State, Domain | Name |
-| People | `/people` | First name, Last name, Gender, Region, Date of birth, Email, Phone, Street, City, State, Postal code, Country, Employer, Employer city, Employer state, Employer domain | Last name |
+| People | `/people` | First name, Last name, Native name, Gender, Region, Date of birth, Email, Phone, Street, City, State, Postal code, Country, Employer, Employer city, Employer state, Employer domain | Last name |
 
 Each column has a key, its title in camelCase (`dateOfBirth`,
 `employerDomain`). The key names it in the `sort` parameter and in JSON.
+
+Native name (`nativeName`) is the whole name in its own script, as
+faux-person 0.3.0 gives it: Hangul for South Korean names (전영민), and
+blank for every other region. Like any column it's in the table, the row's
+card and every download.
 
 ### The reference date
 
