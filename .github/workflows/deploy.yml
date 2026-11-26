@@ -46,7 +46,19 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: maven
+      # Maven's downloads are kept between runs, keyed on pom.xml and the month. When
+      # pom.xml changes, as every version bump does, the restore key starts from main's
+      # last copy, so Maven fetches only what's new and Central doesn't throttle us
+      # (HTTP 429). A new month starts a fresh copy from Central, so nothing in it lasts past the month.
+      - name: Cache month
+        id: month
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+      # This job builds what's deployed, so it only reads the cache; build.yml writes it.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ steps.month.outputs.month }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: maven-${{ runner.os }}-${{ steps.month.outputs.month }}-
       # The commit goes into every ETag, so a release never matches an older one's.
       - name: Build and test
         run: mvn -B verify "-Dbuild.id=${GITHUB_SHA::12}"
