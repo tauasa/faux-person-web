@@ -226,7 +226,7 @@ can't do.
   file** beside Format does the same for a file the form gives. The script
   disables it while Format is HTML; without the script it does nothing there.
 - **Version and build**, under the panel, on the right of the license note:
-  `Version[Build]: v<app version>[yyyyMMdd-HHmm]`, the time Maven built the
+  `v<app version>[yyyyMMdd-HHmm]`, with no label, the time Maven built the
   jar, in UTC. Up to 900px wide it goes below the note. A browser may show a
   page it kept, with the older build, for up to a day.
 - **Light and dark** follow the browser's `prefers-color-scheme`.

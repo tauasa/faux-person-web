@@ -140,7 +140,8 @@ class PageTest extends HttpTest {
         assertTrue(pom.find(), "the pom's version");
         for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
             String line = between(get(path).body(), "<p class=\"build\">", "</p>").replaceAll("<[^>]*>", "");
-            Matcher shown = Pattern.compile("Version\\[Build\\]: v([^\\s\\[]+)\\[(\\d{8}-\\d{4})\\]").matcher(line);
+            // Only the version and build, with no label in front.
+            Matcher shown = Pattern.compile("v([^\\s\\[]+)\\[(\\d{8}-\\d{4})\\]").matcher(line);
             assertTrue(shown.matches(), line);
             assertEquals(pom.group(1), shown.group(1), path);
             // The page's bytes hold the build time, so the version in every ETag must too.
