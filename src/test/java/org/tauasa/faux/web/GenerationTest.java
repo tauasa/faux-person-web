@@ -70,6 +70,6 @@ class GenerationTest {
     void peopleHaveNoAgeColumnBecauseItWouldChangeWithTheDate() {
         assertEquals(List.of("firstName", "lastName", "nativeName", "gender", "region", "dateOfBirth", "email", "phone",
                 "street", "city", "state", "postalCode", "country", "employer", "employerCity", "employerState",
-                "employerDomain"), Kind.PEOPLE.columns().stream().map(Column::key).toList());
+                "employerCountry", "employerDomain"), Kind.PEOPLE.columns().stream().map(Column::key).toList());
     }
 }

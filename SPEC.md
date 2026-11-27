@@ -32,16 +32,20 @@ Generation is faux-person's. The app adds no fields of its own.
 | Kind | Path | Columns, in order | Opens sorted by |
 |---|---|---|---|
 | Names | `/names` | First name, Last name, Native name | Last name |
-| Companies | `/companies` | Name, City, State, Domain | Name |
-| People | `/people` | First name, Last name, Native name, Gender, Region, Date of birth, Email, Phone, Street, City, State, Postal code, Country, Employer, Employer city, Employer state, Employer domain | Last name |
+| Companies | `/companies` | Name, City, State, Country, Domain | Name |
+| People | `/people` | First name, Last name, Native name, Gender, Region, Date of birth, Email, Phone, Street, City, State, Postal code, Country, Employer, Employer city, Employer state, Employer country, Employer domain | Last name |
 
 Each column has a key, its title in camelCase (`dateOfBirth`,
 `employerDomain`). The key names it in the `sort` parameter and in JSON.
 
 Native name (`nativeName`) is the whole name in its own script, as
-faux-person 0.3.0 gives it: Hangul for South Korean names (전영민), and
-blank for every other region. Like any column it's in the table, the row's
-card and every download.
+faux-person gives it: Hangul for South Korean names (전영민), and from 0.4.0
+kanji, Cyrillic, Greek, Hebrew, Arabic and Persian for those regions' names
+that Wikidata spells in them; blank otherwise. Country (`country`,
+`employerCountry`) is a company's headquarters country as an ISO 3166-1 code;
+State is blank outside the US. faux-person 0.4.0 adds 4,000 international
+companies, and a person works for one in their region's countries. Like any
+column, these are in the table, the row's card and every download.
 
 ### The reference date
 

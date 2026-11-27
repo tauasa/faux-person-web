@@ -100,8 +100,9 @@ class RowsControllerTest extends HttpTest {
         csv.lines().skip(1).forEach(l -> assertTrue(l.matches("[^,]+,[^,]+,[\\uAC00-\\uD7A3]{2,6}"), l));
         String json = get("/people?count=5&seed=3&region=rok&format=json").body();
         assertEquals(5, json.split("\"nativeName\":\\s*\"[\\uAC00-\\uD7A3]{2,6}\"").length - 1, json);
-        String rus = get("/names?count=5&seed=3&region=rus&format=csv").body();
-        rus.lines().skip(1).forEach(l -> assertTrue(l.endsWith(","), l));
+        // British names have no native form, so the column is empty.
+        String gbr = get("/names?count=5&seed=3&region=gbr&format=csv").body();
+        gbr.lines().skip(1).forEach(l -> assertTrue(l.endsWith(","), l));
     }
 
     @Test
