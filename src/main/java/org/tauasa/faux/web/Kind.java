@@ -34,6 +34,7 @@ public enum Kind {
             Column.of(Company.class, "Name", Company::name),
             Column.of(Company.class, "City", Company::city),
             Column.of(Company.class, "State", Company::state),
+            Column.of(Company.class, "Country", Company::country),
             Column.of(Company.class, "Domain", Company::domain))) {
         @Override
         List<?> generate(RowsKey key) {
@@ -63,6 +64,7 @@ public enum Kind {
             Column.of(Person.class, "Employer", p -> p.employer().name()),
             Column.of(Person.class, "Employer city", p -> p.employer().city()),
             Column.of(Person.class, "Employer state", p -> p.employer().state()),
+            Column.of(Person.class, "Employer country", p -> p.employer().country()),
             Column.of(Person.class, "Employer domain", p -> p.employer().domain()))) {
         @Override
         List<?> generate(RowsKey key) {
