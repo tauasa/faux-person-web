@@ -267,6 +267,7 @@ tbody tr.row-shown { outline: 2px solid var(--accent); outline-offset: -2px; }
   font-size: 0.85rem;
 }
 .note p { margin: 0; }
+.note .credit { display: block; margin-top: 4px; }
 /* The note's size, the same as the license line beside it. */
 .note .build { flex-shrink: 0; white-space: nowrap; }
 

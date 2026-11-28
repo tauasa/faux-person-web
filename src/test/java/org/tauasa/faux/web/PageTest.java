@@ -134,6 +134,20 @@ class PageTest extends HttpTest {
     }
 
     @Test
+    void thePageAndItsErrorPageCreditTheData() {
+        for (String path : List.of("/people?count=5&seed=1", "/people?count=0")) {
+            String html = get(path).body();
+            String credit = between(html, "<span class=\"credit\" id=\"data-credit\">", "</span>");
+            // GeoNames is CC BY 4.0: it asks for the credit, the license and the changes made.
+            assertTrue(credit.contains("GeoNames") && credit.contains("https://creativecommons.org/licenses/by/4.0/"),
+                    path + ": " + credit);
+            assertTrue(credit.contains("sampled per state") && credit.contains("one postal code per street"),
+                    path + ": CC BY asks that changes be noted: " + credit);
+            assertTrue(credit.contains("Wikidata") && credit.contains("TIGER/Line"), path + ": " + credit);
+        }
+    }
+
+    @Test
     void thePageAndItsErrorPageShowTheVersionAndWhenItWasBuilt() throws IOException {
         Matcher pom = Pattern.compile("<artifactId>faux-person-web</artifactId>\\s*<version>([^<]+)</version>")
                 .matcher(Files.readString(Path.of("pom.xml")));

@@ -245,6 +245,10 @@ can't do.
   cURL command for the CSV, with a Copy button. **Zip
   file** beside Format does the same for a file the form gives. The script
   disables it while Format is HTML; without the script it does nothing there.
+- **Data credit**, in the license note, on the page and its error page:
+  Wikidata (CC0 1.0), GeoNames under CC BY 4.0 with the changes faux-person
+  made to it, which that license asks for, and US Census Bureau TIGER/Line,
+  worded as [NOTICE](NOTICE) words it.
 - **Version and build**, under the panel, on the right of the license note:
   `v<app version>[yyyyMMdd-HHmm]`, with no label, the time Maven built the
   jar, in UTC. Up to 900px wide it goes below the note. A browser may show a

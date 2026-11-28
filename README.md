@@ -253,4 +253,6 @@ one-time setup and how to roll back.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). [NOTICE](NOTICE) lists where faux-person's data
+comes from, including the GeoNames data under CC BY 4.0, which the page also
+credits under every table.
