@@ -20,7 +20,7 @@ same three kinds, the same controls, the same columns.
 ## In a browser
 
 1. Open https://apps.tauasa.org/faux-person-web. It opens on **People**; the
-   tabs switch to **Names** or **Companies**.
+   tabs switch to **Companies** or **Names**.
 2. Set the controls:
    - **Count**: how many rows, 1 to 5,000. 100 to start.
    - **Region** (names and people): where first and last names come from.

@@ -207,7 +207,7 @@ can't do.
   logo and Home, Projects and About links (to `https://tauasa.org/`), and the
   copyright and social icons, in that site's colors. A change there has to be
   copied here.
-- **Tabs** Names, Companies, People, as links.
+- **Tabs** People, Companies, Names, as links, in that order, as faux-person-fx has them.
 - **Controls**, in faux-person-fx's order: Count, Region (names and people),
   Seed, a **Random** button that clears the seed, Real companies (companies
   and people), Format, Zip file, and **Generate**. Region and Real companies show only
