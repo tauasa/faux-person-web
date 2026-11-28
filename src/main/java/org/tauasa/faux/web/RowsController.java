@@ -125,20 +125,22 @@ public class RowsController {
         int to = Math.min(total, from + size);
 
         String sortKey = request.sort().key();
+        // Judged on every row, not just this page's, so a column doesn't come and go between pages.
+        List<Column> columns = kind.shownColumns(sorted);
         List<PageView.Header> headers = new ArrayList<>();
-        for (Column column : kind.columns()) {
+        for (Column column : columns) {
             boolean sortedHere = column.key().equals(sortKey);
             // A click sorts A to Z, and a second click on the sorted column reverses it.
             boolean nextDescending = sortedHere && !request.descending();
             String arrow = sortedHere ? (request.descending() ? "▼" : "▲") : "";
             String ariaSort = sortedHere ? (request.descending() ? "descending" : "ascending") : "none";
             headers.add(new PageView.Header(column.title(), links.page(column.key(), nextDescending, 1, size),
-                    arrow, ariaSort));
+                    arrow, ariaSort, Kind.ownScript(column)));
         }
 
         List<List<String>> cells = new ArrayList<>(to - from);
         for (Object row : sorted.subList(from, to)) {
-            cells.add(kind.columns().stream().map(c -> String.valueOf(c.valueOf(row))).toList());
+            cells.add(columns.stream().map(c -> String.valueOf(c.valueOf(row))).toList());
         }
 
         List<PageView.PageLink> pageLinks = new ArrayList<>();

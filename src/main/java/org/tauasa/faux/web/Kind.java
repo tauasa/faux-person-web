@@ -135,6 +135,24 @@ public enum Kind {
         return columns;
     }
 
+    /**
+     * The columns the page's table shows for these rows: all of them, less
+     * Native name when none of the rows has one. Downloads keep every column,
+     * so a file's layout doesn't depend on the seed.
+     */
+    public List<Column> shownColumns(List<?> rows) {
+        return columns.stream()
+                .filter(c -> !c.key().equals(NATIVE_NAME) || rows.stream().anyMatch(r -> !"".equals(c.valueOf(r))))
+                .toList();
+    }
+
+    /** Whether a column holds names in their own script, which may run right to left. */
+    public static boolean ownScript(Column column) {
+        return column.key().equals(NATIVE_NAME);
+    }
+
+    private static final String NATIVE_NAME = "nativeName";
+
     /** The column the table opens sorted by. */
     public Column defaultSort() {
         return column(defaultSort).orElseThrow();

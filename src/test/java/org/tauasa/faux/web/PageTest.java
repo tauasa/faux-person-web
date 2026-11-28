@@ -21,8 +21,8 @@ import org.junit.jupiter.api.Test;
 
 class PageTest extends HttpTest {
 
-    private static final Pattern ROW = Pattern.compile("<tr>\\s*((?:<td>[^<]*</td>\\s*)+)</tr>");
-    private static final Pattern CELL = Pattern.compile("<td>([^<]*)</td>");
+    private static final Pattern ROW = Pattern.compile("<tr>\\s*((?:<td[^>]*>[^<]*</td>\\s*)+)</tr>");
+    private static final Pattern CELL = Pattern.compile("<td[^>]*>([^<]*)</td>");
 
     /** The table's body rows, each as its cells. */
     private static List<List<String>> rows(String html) {
@@ -190,6 +190,26 @@ class PageTest extends HttpTest {
         for (int i = 1; i < rows.size(); i++) {
             assertTrue(Column.VALUE_ORDER.compare(rows.get(i - 1).get(2), rows.get(i).get(2)) >= 0);
         }
+    }
+
+    @Test
+    void nativeNameIsLeftOffThePageWhenNoRowHasOne() {
+        String html = get("/people?count=30&seed=3&region=WESTERN").body();
+        assertFalse(html.contains(">Native name<"), "Western names have no native script");
+        assertEquals(17, rows(html).get(0).size(), "every column but Native name");
+        String csv = get("/people?count=30&seed=3&region=WESTERN&format=csv").body();
+        assertTrue(csv.startsWith("First name,Last name,Native name,"), "downloads keep every column");
+    }
+
+    @Test
+    void nativeNamesTakeTheirDirectionFromTheirText() {
+        String html = get("/names?count=30&seed=3&region=HEB").body();
+        assertTrue(html.contains(">Native name<"), "Hebrew names have one");
+        Matcher cell = Pattern.compile("<td dir=\"auto\">([^<]*)</td>").matcher(html);
+        assertTrue(cell.find(), "the native-name cells carry dir=auto");
+        assertTrue(cell.group(1).isEmpty() || cell.group(1).matches(".*[\\u0590-\\u05FF].*"), cell.group(1));
+        assertEquals(rows(html).size(), html.split("<td dir=\"auto\">").length - 1,
+                "one per row, and only in that column");
     }
 
     @Test
