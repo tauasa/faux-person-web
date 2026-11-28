@@ -265,8 +265,8 @@ tbody tr.row-shown { outline: 2px solid var(--accent); outline-offset: -2px; }
   font-size: 0.85rem;
 }
 .note p { margin: 0; }
-/* The page's own size, as the pager under the table has it, not the note's smaller one. */
-.note .build { flex-shrink: 0; white-space: nowrap; font-size: 15px; }
+/* The note's size, the same as the license line beside it. */
+.note .build { flex-shrink: 0; white-space: nowrap; }
 
 /* Below this the seed, rows and page links don't fit on one line. */
 @media (max-width: 900px) {
