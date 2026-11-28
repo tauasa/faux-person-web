@@ -47,9 +47,10 @@ after the seed above the table copies it.
 
 **The same rows as a file.** Under the table, **The same rows, every one (zipped)**
 downloads the rows on screen in each format, in a zip file: all rows, sorted as
-the table is, named for example `people-42.csv.zip` after the seed. For a file
-that isn't zipped, pick a **Format** and press **Generate**; tick **Zip file**
-there to zip it. It's off for HTML. Under the buttons is the cURL command that
+the table is, named for example `people-42.csv.zip` after the seed. For one
+format, pick a **Format** and press **Generate**. **Zip file** is ticked, so the
+file comes zipped with its data credit; untick it for the bare file. It's off
+for HTML. Under the buttons is the cURL command that
 fetches the rows as CSV, with a **Copy** button; change `format=csv` at its end
 for another format, or add `&zip=true` for a zip file.
 
@@ -140,7 +141,9 @@ Every format but `html` holds all the rows, sorted by `sort` and `dir`. Files
 are UTF-8 with no byte-order mark. Each response names a file,
 `<path>-<seed>.<format>`, which a browser uses when it saves one. With
 `zip=true` the response is `application/zip`, named
-`<path>-<seed>.<ext>.zip`, and holds that one file as `<path>-<seed>.<ext>`.
+`<path>-<seed>.<ext>.zip`, and holds that file as `<path>-<seed>.<ext>`, with
+`NOTICE.txt` beside it crediting the data. A file that isn't zipped points at
+the same credit in a `Link: <…/NOTICE>; rel="license"` header.
 There `<ext>` is `csv` or `json`, and `txt` for both `psv` and `tsv`.
 
 **Errors.** A value the app can't use gets `400 Bad Request` and one line
@@ -253,4 +256,6 @@ one-time setup and how to roll back.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). [NOTICE](NOTICE) lists where faux-person's data
+comes from, including the GeoNames data under CC BY 4.0, which the page also
+credits under every table and puts in every zip.

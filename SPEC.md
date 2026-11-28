@@ -126,12 +126,15 @@ The non-HTML formats hold every row, sorted by `sort` and `dir`, with no
 paging. Unless zipped, they carry
 `Content-Disposition: inline; filename="<kind>-<seed>.<ext>"`,
 so a browser that saves one names it usefully. All files are UTF-8 with no
-byte-order mark.
+byte-order mark. Zipped or not, each carries
+`Link: <https://github.com/tauasa/faux-person-web/blob/main/NOTICE>; rel="license"`,
+since a bare CSV or JSON file has no room for the credit.
 
 **Zipped.** With `zip=true` the response is `application/zip`, as an
-`attachment` named `<kind>-<seed>.<ext>.zip`, and holds one file, the same
-bytes as without it. `<ext>` is `txt` for `psv` and `tsv`, so those two share a
-name. The archive is made in memory. The file in it is always
+`attachment` named `<kind>-<seed>.<ext>.zip`, and holds two files: the same
+bytes as without it, then `NOTICE.txt`, the repo's [NOTICE](NOTICE), which
+credits the data as GeoNames's CC BY 4.0 license asks a copy to. `<ext>` is `txt` for `psv` and `tsv`, so those two share a
+name. The archive is made in memory. The files in it are always
 dated 2026-01-01 00:00, so the same request gives the same archive on the same
 Java runtime. A Java or zlib update can compress it differently under the same
 ETag; the file inside stays the same.
@@ -243,8 +246,15 @@ can't do.
 - **Other formats.** Filled buttons that change color on hover, linking to the
   same rows as CSV, pipe, tab-delimited and JSON, each in a zip file, and the
   cURL command for the CSV, with a Copy button. **Zip
-  file** beside Format does the same for a file the form gives. The script
-  disables it while Format is HTML; without the script it does nothing there.
+  file** beside Format does the same for a file the form gives. It starts
+  ticked, so a file comes with its data credit. The script disables and
+  unticks it while Format is HTML, and puts back the person's last choice for
+  any other format; without the script it does nothing there. The `zip`
+  parameter still defaults to `false`, so the cURL command is unchanged.
+- **Data credit**, in the license note, on the page and its error page:
+  Wikidata (CC0 1.0), GeoNames under CC BY 4.0 with the changes faux-person
+  made to it, which that license asks for, and US Census Bureau TIGER/Line,
+  worded as [NOTICE](NOTICE) words it. The downloads carry NOTICE too: see *Zipped*.
 - **Version and build**, under the panel, on the right of the license note:
   `v<app version>[yyyyMMdd-HHmm]`, with no label, the time Maven built the
   jar, in UTC. Up to 900px wide it goes below the note. A browser may show a
@@ -402,8 +412,8 @@ instance. These were added; each can be dropped.
 | `RowsRequestTest` | Defaults, the count limit, bad seeds, regions, sort keys, formats, pages and sizes are refused with the parameter named; settings that make no sense stop the app; the default rows per page comes from the settings, and must be a size the page offers |
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served; a zip is its own body, made once |
-| `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address; a zip holds the same file and nothing else, has its own ETag, and is the same bytes in any time zone |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered once, in a zip; Native name is left off the page, not the download, when no row has one, and its cells carry `dir="auto"` |
+| `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address; a zip holds the same file and NOTICE.txt and nothing else, every file links to NOTICE, the NOTICE credits GeoNames with its license and changes, a zip has its own ETag, and is the same bytes in any time zone |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the data credit, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered once, in a zip; Native name is left off the page, not the download, when no row has one, and its cells carry `dir="auto"` |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it

@@ -2,6 +2,7 @@ package org.tauasa.faux.web;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -32,22 +33,50 @@ public final class Exporter {
     /** The date every file in an archive carries, so the same file always gives the same archive. */
     private static final LocalDateTime ZIP_DATE = LocalDateTime.of(2026, 1, 1, 0, 0);
 
+    /** The name of the data credit in every archive. */
+    public static final String NOTICE_NAME = "NOTICE.txt";
+
+    /**
+     * The repo's NOTICE, which the build puts next to this class. GeoNames is
+     * CC BY 4.0, which asks that a copy of its data carry the credit.
+     */
+    static final byte[] NOTICE = notice();
+
     private Exporter() {
     }
 
-    /** A zip archive holding one file, made in memory. The same file gives the same bytes on one Java runtime. */
+    private static byte[] notice() {
+        try (InputStream in = Exporter.class.getResourceAsStream("NOTICE")) {
+            if (in == null) {
+                throw new IllegalStateException("NOTICE is missing from the classpath; the build copies it");
+            }
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * A zip archive holding the file and then {@link #NOTICE_NAME}, made in
+     * memory. The same file gives the same bytes on one Java runtime.
+     */
     public static byte[] zip(String fileName, byte[] file) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(file.length / 2 + 256);
+        ByteArrayOutputStream out = new ByteArrayOutputStream(file.length / 2 + NOTICE.length + 256);
         try (ZipOutputStream zip = new ZipOutputStream(out, StandardCharsets.UTF_8)) {
-            ZipEntry entry = new ZipEntry(fileName);
-            entry.setTimeLocal(ZIP_DATE);
-            zip.putNextEntry(entry);
-            zip.write(file);
-            zip.closeEntry();
+            put(zip, fileName, file);
+            put(zip, NOTICE_NAME, NOTICE);
         } catch (IOException e) {
             throw new UncheckedIOException(e); // a ByteArrayOutputStream never throws
         }
         return out.toByteArray();
+    }
+
+    private static void put(ZipOutputStream zip, String name, byte[] bytes) throws IOException {
+        ZipEntry entry = new ZipEntry(name);
+        entry.setTimeLocal(ZIP_DATE);
+        zip.putNextEntry(entry);
+        zip.write(bytes);
+        zip.closeEntry();
     }
 
     /** The whole body, as UTF-8 bytes with no byte-order mark. */

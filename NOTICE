@@ -1,0 +1,25 @@
+faux-person-web
+Copyright 2026 Tauasa Timoteo
+
+faux-person-web is under the MIT License (see LICENSE). The people,
+companies and names it serves come from faux-person
+(https://github.com/tauasa/faux-person, MIT License), whose data is built
+from these sources. faux-person's own NOTICE, in its jar at META-INF/NOTICE,
+gives the detail. The page credits them under every table.
+
+1. Wikidata (https://www.wikidata.org), CC0 1.0: given and family names,
+   their spellings in their own scripts, company names, headquarters,
+   countries and official websites, and the names and locations of streets
+   outside the US.
+
+2. GeoNames (https://www.geonames.org), licensed under the Creative Commons
+   Attribution 4.0 License (https://creativecommons.org/licenses/by/4.0/):
+   the city and state for each ZIP code, company headquarters resolved to a
+   city, and the city and postal code nearest each street outside the US.
+   Changes: places were sampled per state, joined to postal codes, and
+   reduced to name, state and one ZIP code; outside the US, reduced to a
+   place name and one postal code per street.
+
+3. US Census Bureau, TIGER/Line Shapefiles 2024, Address Features (ADDRFEAT).
+   A work of the US Government, not subject to copyright in the United States.
+   Street names and ZIP codes.

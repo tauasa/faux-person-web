@@ -31,6 +31,11 @@ public class RowsController {
     /** The header that names the seed behind a response's rows. */
     public static final String SEED_HEADER = "X-Faux-Seed";
     private static final String ZIP_TYPE = "application/zip";
+    /**
+     * On every file, zipped or not: where the data credit is. A zip also holds
+     * it as {@link Exporter#NOTICE_NAME}; a bare CSV or JSON has no room for it.
+     */
+    public static final String NOTICE_LINK = "<https://github.com/tauasa/faux-person-web/blob/main/NOTICE>; rel=\"license\"";
 
     private static final CacheControl FOREVER = CacheControl.maxAge(java.time.Duration.ofDays(1))
             .cachePublic().immutable();
@@ -93,6 +98,7 @@ public class RowsController {
                     request.zip() ? ZIP_TYPE : request.format().contentType()));
             headers.set(HttpHeaders.CONTENT_DISPOSITION, (request.zip() ? "attachment" : "inline")
                     + "; filename=\"" + file.downloadName() + "\"");
+            headers.set(HttpHeaders.LINK, NOTICE_LINK);
             return ResponseEntity.ok().headers(headers).body(body);
         }
 

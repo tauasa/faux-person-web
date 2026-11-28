@@ -55,11 +55,15 @@
   var format = document.getElementById("format");
   var zip = document.getElementById("zip");
   if (format && zip) {
+    // Ticked by default, so a file comes with its data credit. Off for HTML,
+    // and back to the person's last choice for any other format.
+    var wantZip = zip.defaultChecked;
+    zip.addEventListener("change", function () {
+      wantZip = zip.checked;
+    });
     var syncZip = function () {
       zip.disabled = format.value === "html";
-      if (zip.disabled) {
-        zip.checked = false;
-      }
+      zip.checked = !zip.disabled && wantZip;
     };
     format.addEventListener("change", syncZip);
     // Going back to the page can restore another format after this script ran.

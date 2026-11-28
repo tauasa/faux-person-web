@@ -70,7 +70,7 @@
       </select>
     </label>
     <label class="check">
-      <input type="checkbox" name="zip" id="zip" value="true"> Zip file
+      <input type="checkbox" name="zip" id="zip" value="true" checked> Zip file
     </label>
     <input type="hidden" name="sort" th:value="${view.form().sort()}">
     <input type="hidden" name="dir" th:value="${view.form().dir()}">
@@ -145,6 +145,14 @@
   <a href="https://github.com/tauasa/faux-person-web">faux-person-web</a> ·
   <a href="https://github.com/tauasa/faux-person">faux-person</a> · MIT license.
   Nothing is stored: rows live in this server's memory until it restarts.
+  <!-- GeoNames is CC BY 4.0, which asks for this credit and the changes made. Worded as NOTICE words it. -->
+  <span class="credit" id="data-credit">Data from faux-person, built from
+    <a href="https://www.wikidata.org">Wikidata</a> (CC0 1.0);
+    <a href="https://www.geonames.org">GeoNames</a>, under
+    <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, with places sampled per state,
+    joined to postal codes and reduced to name, state and one ZIP code, and outside the US reduced to a
+    place name and one postal code per street; and US Census Bureau TIGER/Line Shapefiles 2024, a work of
+    the US Government not subject to copyright in the United States.</span>
 </p>
 <p class="build"><span th:text="${@buildInfo.label()}">v1.2.3[20260131-1745]</span></p>
 </div>
