@@ -238,6 +238,15 @@ class PageTest extends HttpTest {
     }
 
     @Test
+    void theTabsRunPeopleCompaniesNames() {
+        String html = get("/names?count=5&seed=1").body();
+        int people = html.indexOf(">People</a>");
+        int companies = html.indexOf(">Companies</a>");
+        int names = html.indexOf(">Names</a>");
+        assertTrue(people >= 0 && people < companies && companies < names, "People, Companies, Names");
+    }
+
+    @Test
     void thePageLoadsOnlyItsOwnScriptAndStyles() {
         String html = get("/people?count=5&seed=1").body();
         assertTrue(Pattern.compile("<script src=\"/faux-person-web/app\\.js\\?v=[0-9a-f]{16}\" defer></script>")

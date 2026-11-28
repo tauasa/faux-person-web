@@ -19,31 +19,6 @@ import org.tauasa.faux.model.Person;
  * and how faux-person makes its rows.
  */
 public enum Kind {
-    NAMES("names", "Names", true, false, "lastName", List.of(
-            Column.of(Name.class, "First name", Name::firstName),
-            Column.of(Name.class, "Last name", Name::lastName),
-            Column.of(Name.class, "Native name", Kind::nativeName))) {
-        @Override
-        List<?> generate(RowsKey key) {
-            NameGenerator.Builder builder = NameGenerator.builder().region(key.region()).seed(key.seed());
-            return builder.build().next(key.count());
-        }
-    },
-
-    COMPANIES("companies", "Companies", false, true, "name", List.of(
-            Column.of(Company.class, "Name", Company::name),
-            Column.of(Company.class, "City", Company::city),
-            Column.of(Company.class, "State", Company::state),
-            Column.of(Company.class, "Country", Company::country),
-            Column.of(Company.class, "Domain", Company::domain))) {
-        @Override
-        List<?> generate(RowsKey key) {
-            CompanyGenerator.Builder builder = CompanyGenerator.builder()
-                    .realCompanies(key.real()).seed(key.seed());
-            return builder.build().next(key.count());
-        }
-    },
-
     // faux-person-fx's people columns, less Age: an age changes with the date,
     // and the same seed must give the same output on any day.
     PEOPLE("people", "People", true, true, "lastName", List.of(
@@ -70,6 +45,31 @@ public enum Kind {
         List<?> generate(RowsKey key) {
             PersonGenerator.Builder builder = PersonGenerator.builder()
                     .region(key.region()).realCompanies(key.real()).seed(key.seed()).clock(REFERENCE_CLOCK);
+            return builder.build().next(key.count());
+        }
+    },
+
+    COMPANIES("companies", "Companies", false, true, "name", List.of(
+            Column.of(Company.class, "Name", Company::name),
+            Column.of(Company.class, "City", Company::city),
+            Column.of(Company.class, "State", Company::state),
+            Column.of(Company.class, "Country", Company::country),
+            Column.of(Company.class, "Domain", Company::domain))) {
+        @Override
+        List<?> generate(RowsKey key) {
+            CompanyGenerator.Builder builder = CompanyGenerator.builder()
+                    .realCompanies(key.real()).seed(key.seed());
+            return builder.build().next(key.count());
+        }
+    },
+
+    NAMES("names", "Names", true, false, "lastName", List.of(
+            Column.of(Name.class, "First name", Name::firstName),
+            Column.of(Name.class, "Last name", Name::lastName),
+            Column.of(Name.class, "Native name", Kind::nativeName))) {
+        @Override
+        List<?> generate(RowsKey key) {
+            NameGenerator.Builder builder = NameGenerator.builder().region(key.region()).seed(key.seed());
             return builder.build().next(key.count());
         }
     };
