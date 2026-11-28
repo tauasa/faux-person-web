@@ -108,7 +108,8 @@
         </thead>
         <tbody>
         <tr th:each="row : ${t.rows()}">
-          <td th:each="cell : ${row}" th:text="${cell}">value</td>
+          <td th:each="cell, c : ${row}" th:text="${cell}"
+              th:dir="${t.headers()[c.index].ownScript()} ? 'auto' : null">value</td>
         </tr>
         </tbody>
       </table>

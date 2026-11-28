@@ -47,6 +47,13 @@ State is blank outside the US. faux-person 0.4.0 adds 4,000 international
 companies, and a person works for one in their region's countries. Like any
 column, these are in the table, the row's card and every download.
 
+The page's table leaves Native name out when no row in the whole result has
+one, such as Western names, so the column doesn't come and go between pages.
+Downloads always keep it, so a file's columns don't depend on the seed. When
+the column shows, each cell takes its direction from its text (`dir="auto"`),
+so Hebrew, Arabic and Persian names sit on the right of the cell, in the table
+and in the row's card.
+
 ### The reference date
 
 faux-person picks a person's date of birth relative to its clock's today,
@@ -392,7 +399,7 @@ instance. These were added; each can be dropped.
 | `ExporterTest` | CSV, pipe, tab and JSON bodies: quoting, line ends, escaping, the header row, no byte-order mark |
 | `CacheTest` | A repeat generates nothing; orders and formats share one generation; the ceilings hold; a restarted store makes the same bytes; one key generates once under concurrency; when every permit is taken a miss is refused and a hit is served; a zip is its own body, made once |
 | `RowsControllerTest` | Each format's status, type, file name and seed header; the same bytes and ETag for the same seed; `304`; `no-store` without a seed; `400` naming the parameter, as text and as the page; a page past the last; `503` with `Retry-After` when busy; root, health, `404`, `405`; the cURL command's address; a zip holds the same file and nothing else, has its own ETag, and is the same bytes in any time zone |
-| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered once, in a zip |
+| `PageTest` | The page shows its seed and every link keeps it; pages hold the right slice; headers sort and reverse; Region and Real companies show only where they apply; one active tab; no inline script or style, on the error page too; the script's and stylesheet's addresses carry a hash of their content, and older addresses still load; the same page number and links above and below the table, in order; the site header and footer, on the HTML 400 page too; the version and build time, on the HTML 400 page too, and the build time in the ETag's version; the copy icon follows the seed, named and hidden until the script runs, and isn't on the error page; every format is offered once, in a zip; Native name is left off the page, not the download, when no row has one, and its cells carry `dir="auto"` |
 | `SecurityHeadersTest` | The headers on every response, error pages and redirects included |
 
 `HttpTest` is their base: it starts the app on a random port and calls it

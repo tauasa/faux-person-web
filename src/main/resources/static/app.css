@@ -193,6 +193,8 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 th, td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
 th { background: var(--stripe); position: sticky; top: 0; }
+/* A native name takes its direction from its text, so Hebrew, Arabic and Persian sit on the right. */
+td[dir="auto"] { text-align: start; }
 th a { color: var(--fg); text-decoration: none; }
 th a:hover { text-decoration: underline; }
 tbody tr:nth-child(even) { background: var(--stripe); }

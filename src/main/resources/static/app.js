@@ -132,7 +132,7 @@
 
     var lines = function (row) {
       return Array.prototype.map.call(row.cells, function (cell, i) {
-        return { title: titles[i] || "Column " + (i + 1), value: cell.textContent };
+        return { title: titles[i] || "Column " + (i + 1), value: cell.textContent, dir: cell.getAttribute("dir") };
       });
     };
 
@@ -166,6 +166,10 @@
         var dd = document.createElement("dd");
         dt.textContent = line.title;
         dd.textContent = line.value;
+        // A native name keeps its direction in the card too: right to left for Hebrew or Arabic.
+        if (line.dir) {
+          dd.dir = line.dir;
+        }
         fields.appendChild(dt);
         fields.appendChild(dd);
         return line.title + ": " + line.value;

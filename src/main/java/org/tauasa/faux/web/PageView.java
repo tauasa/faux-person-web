@@ -36,9 +36,12 @@ public record PageView(Kind kind, List<Tab> tabs, Form form, Table table, List<D
     }
 
     /**
-     * @param arrow "▲", "▼" or empty: the sorted column's direction
+     * @param arrow     "▲", "▼" or empty: the sorted column's direction
+     * @param ownScript the column's cells hold names in their own script, so each
+     *                  cell takes its direction from its text: Hebrew, Arabic and
+     *                  Persian run right to left
      */
-    public record Header(String title, String href, String arrow, String ariaSort) {
+    public record Header(String title, String href, String arrow, String ariaSort, boolean ownScript) {
     }
 
     public record PageLink(String label, String href) {
