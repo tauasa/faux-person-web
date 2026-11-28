@@ -77,6 +77,15 @@
           <exclude>application.properties</exclude>
         </excludes>
       </resource>
+      <!-- NOTICE, next to Exporter, which puts it in every zip as NOTICE.txt. The repo's copy is the only one. -->
+      <resource>
+        <directory>${project.basedir}</directory>
+        <filtering>false</filtering>
+        <targetPath>org/tauasa/faux/web</targetPath>
+        <includes>
+          <include>NOTICE</include>
+        </includes>
+      </resource>
     </resources>
     <plugins>
       <plugin>

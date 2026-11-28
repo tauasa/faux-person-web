@@ -140,7 +140,9 @@ Every format but `html` holds all the rows, sorted by `sort` and `dir`. Files
 are UTF-8 with no byte-order mark. Each response names a file,
 `<path>-<seed>.<format>`, which a browser uses when it saves one. With
 `zip=true` the response is `application/zip`, named
-`<path>-<seed>.<ext>.zip`, and holds that one file as `<path>-<seed>.<ext>`.
+`<path>-<seed>.<ext>.zip`, and holds that file as `<path>-<seed>.<ext>`, with
+`NOTICE.txt` beside it crediting the data. A file that isn't zipped points at
+the same credit in a `Link: <…/NOTICE>; rel="license"` header.
 There `<ext>` is `csv` or `json`, and `txt` for both `psv` and `tsv`.
 
 **Errors.** A value the app can't use gets `400 Bad Request` and one line
@@ -255,4 +257,4 @@ one-time setup and how to roll back.
 
 MIT. See [LICENSE](LICENSE). [NOTICE](NOTICE) lists where faux-person's data
 comes from, including the GeoNames data under CC BY 4.0, which the page also
-credits under every table.
+credits under every table and puts in every zip.

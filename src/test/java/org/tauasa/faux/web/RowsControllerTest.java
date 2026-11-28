@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -38,19 +41,39 @@ class RowsControllerTest extends HttpTest {
 
     @ParameterizedTest
     @CsvSource({"csv, csv", "psv, txt", "tsv, txt", "json, json"})
-    void aZipHoldsTheSameFileAndNothingElse(String format, String extension) throws IOException {
+    void aZipHoldsTheSameFileAndTheDataCreditAndNothingElse(String format, String extension) throws IOException {
         String path = "/people?count=60&seed=42&format=" + format;
         HttpResponse<byte[]> zipped = getBytes(path + "&zip=true");
         assertEquals(200, zipped.statusCode());
         assertEquals("application/zip", header(zipped, "Content-Type"));
         assertEquals("attachment; filename=\"people-42." + extension + ".zip\"", header(zipped, "Content-Disposition"));
         assertEquals("42", header(zipped, RowsController.SEED_HEADER));
+        assertEquals(RowsController.NOTICE_LINK, header(zipped, "Link"));
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipped.body()))) {
             ZipEntry entry = zip.getNextEntry();
             assertEquals("people-42." + extension, entry.getName());
             assertArrayEquals(getBytes(path).body(), zip.readAllBytes());
-            assertNull(zip.getNextEntry(), "one file");
+            ZipEntry notice = zip.getNextEntry();
+            assertEquals("NOTICE.txt", notice.getName());
+            assertArrayEquals(Files.readAllBytes(Path.of("NOTICE")), zip.readAllBytes(), "the repo's NOTICE");
+            assertNull(zip.getNextEntry(), "the file and the credit");
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"csv", "psv", "tsv", "json"})
+    void aFileThatIsNotZippedLinksToTheDataCredit(String format) {
+        HttpResponse<byte[]> plain = getBytes("/people?count=5&seed=42&format=" + format);
+        assertEquals(200, plain.statusCode());
+        assertEquals(RowsController.NOTICE_LINK, header(plain, "Link"));
+    }
+
+    @Test
+    void theDataCreditNamesGeoNamesItsLicenseAndTheChanges() {
+        String notice = new String(Exporter.NOTICE, StandardCharsets.UTF_8);
+        assertTrue(notice.contains("GeoNames") && notice.contains("https://creativecommons.org/licenses/by/4.0/"), notice);
+        assertTrue(notice.contains("sampled per state") && notice.contains("one postal code per street"),
+                "CC BY asks that changes be noted: " + notice);
     }
 
     @Test
