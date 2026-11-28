@@ -246,8 +246,11 @@ can't do.
 - **Other formats.** Filled buttons that change color on hover, linking to the
   same rows as CSV, pipe, tab-delimited and JSON, each in a zip file, and the
   cURL command for the CSV, with a Copy button. **Zip
-  file** beside Format does the same for a file the form gives. The script
-  disables it while Format is HTML; without the script it does nothing there.
+  file** beside Format does the same for a file the form gives. It starts
+  ticked, so a file comes with its data credit. The script disables and
+  unticks it while Format is HTML, and puts back the person's last choice for
+  any other format; without the script it does nothing there. The `zip`
+  parameter still defaults to `false`, so the cURL command is unchanged.
 - **Data credit**, in the license note, on the page and its error page:
   Wikidata (CC0 1.0), GeoNames under CC BY 4.0 with the changes faux-person
   made to it, which that license asks for, and US Census Bureau TIGER/Line,

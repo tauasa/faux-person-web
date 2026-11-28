@@ -177,7 +177,8 @@ class PageTest extends HttpTest {
     @Test
     void thePageOffersEveryFormatOnceInAZip() {
         String html = get("/people?count=5&seed=1").body();
-        assertTrue(html.contains("type=\"checkbox\" name=\"zip\" id=\"zip\" value=\"true\""), "an option on the form");
+        assertTrue(html.contains("type=\"checkbox\" name=\"zip\" id=\"zip\" value=\"true\" checked"),
+                "an option on the form, ticked, so a file comes with its data credit");
         for (String format : List.of("csv", "psv", "tsv", "json")) {
             assertTrue(html.contains("format=" + format + "&amp;zip=true\""), format);
             assertFalse(html.contains("format=" + format + "\""), format + " has no unzipped button");

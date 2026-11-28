@@ -47,9 +47,10 @@ after the seed above the table copies it.
 
 **The same rows as a file.** Under the table, **The same rows, every one (zipped)**
 downloads the rows on screen in each format, in a zip file: all rows, sorted as
-the table is, named for example `people-42.csv.zip` after the seed. For a file
-that isn't zipped, pick a **Format** and press **Generate**; tick **Zip file**
-there to zip it. It's off for HTML. Under the buttons is the cURL command that
+the table is, named for example `people-42.csv.zip` after the seed. For one
+format, pick a **Format** and press **Generate**. **Zip file** is ticked, so the
+file comes zipped with its data credit; untick it for the bare file. It's off
+for HTML. Under the buttons is the cURL command that
 fetches the rows as CSV, with a **Copy** button; change `format=csv` at its end
 for another format, or add `&zip=true` for a zip file.
 
