@@ -44,7 +44,11 @@ kanji, Cyrillic, Greek, Hebrew, Arabic and Persian for those regions' names
 that Wikidata spells in them; blank otherwise. Country (`country`,
 `employerCountry`) is a company's headquarters country as an ISO 3166-1 code;
 State is blank outside the US. faux-person 0.4.0 adds 4,000 international
-companies, and a person works for one in their region's countries. Like any
+companies, and a person works for one in their region's countries. From
+faux-person 0.5.0 a person also lives in their employer's country: Country is
+the address's country, and outside the US the person's State is blank, Postal
+code is blank where GeoNames has none near the street, and Street is blank in
+countries with too few streets in Wikidata, such as South Korea. Like any
 column, these are in the table, the row's card and every download.
 
 The page's table leaves Native name out when no row in the whole result has
